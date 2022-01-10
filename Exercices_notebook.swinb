@@ -1,0 +1,3868 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Session 1: Introduction to Prolog (PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%?-write(wesh).				 %to write in prolog
+							% '.' marks the end of the query
+							%we must put it every time at the end of a query
+
+%?-write(Wesh). 			%will print something like
+							%_G236
+							%true
+							%here, Wesh is a variable because it starts with a capital
+							%_G236 is the internal representation of that variable
+							
+%?- write(hello world). 	%false ! 
+							%constants in Prolog cannot have space
+							%to print a string with space in it, we should use ''
+							
+%?- write('hello world').   %true
+							%prints : hello world
+							
+%?- write('Hello').     	%string can also start with a capita letter
+							%prints : Hello
+</div>
+
+<div class="nb-cell program" name="p2">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%addind knowledge to the knowledge base (KB)%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%
+%%%FACTS%%%%%%%
+%%%%%%%%%%%%%%%
+
+/*
+Books have a unique ID, their ISBN code: e.g. the book 'The art of Prolog' 
+(written by Statler, 400 pages) has ISBN code 1 and the book 'The mistery of strawberries' 
+(by Waldorf, 42 pages) has ISBN 23. Furthermore, suppose Waldorf owns a copy of 
+'The mistery of strawberries' (but Statler doesn't). Neither Statler nor Waldorf 
+own a copy of 'The art of Prolog', Statler even hates this book.
+*/
+
+%to represent this in Prolog, we will define 'facts'
+
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+%we can now to queries such as :
+%?-book(1,'The art of Prolog',M).  %output : M=400
+%?-book(1,N,M).  %output : M=400, N = 'The art of Prolog'
+%?-book(A,N,M).  %will list all books in the database : 
+				 %first succees : A = 1,
+                 %                M = 400,
+                 %                N = 'The art of Prolog'
+				 %first succees : A = 23,
+                 %                M = 42,
+                 %                N = 'The mistery of Strawberries'
+
+
+%%%%%%%%%%%%%%%
+%%%RULES%%%%%%%
+%%%%%%%%%%%%%%%
+
+%let's now define that a book with less than  100 pages 
+%is a brochure
+
+brochure(ISBN):-             %based on its ISBN, a book is a brochure
+    book(ISBN,_,Pages),      %if it is a book('_' because we do not care about the name)
+    Pages &lt; 100.			 %that contains less than 100 pages
+
+%the idea here is that we define a predicate brochure with one argument ISBN
+%each time we will call the brochure predicate, prolog will, in the code,
+%substitute it with its body, i.e.  book(ISBN,_,Pages), Pages &lt; 100.	
+%the ',' means AND
+%then, prolog will look for instanciation of the variable, i.e. Prolog will
+%look in the facts if there exists such value for the variables 
+%that will make the statement "true"
+
+
+
+%let's do some query : 
+%
+%?-brochure(1)  			 %output : false
+							 %because the book with ISBN 1, i.e. 'The art of Prolog'
+							 %contains 400 pages (which is not less than 100)
+
+%?-brochure(23)  		     %output : true
+							 %because the book with ISBN 23, i.e. 'The mistery of Strawberries'
+							 %contains 42 pages (which is indeed less than 100)
+
+
+%?-brochure(Broch).			 %output : Broch = 23
+</div>
+
+<div class="nb-cell markdown" name="md2">
+EXERCICES :
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1. Formulate a query to retrieve ISBN numbers
+</div>
+
+<div class="nb-cell query" name="q1">
+book(ISBN,_,_).  %'_' because we do not care about title and nummber of pages
+				 %output : 
+				 %ISBN = 1
+				 %ISBN = 23
+</div>
+
+<div class="nb-cell markdown" name="md3">
+2) Formulate a query to retrieve the names of books that are hated by their author.
+</div>
+
+<div class="nb-cell program" name="p3">
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+hated_books(Title) :-     %the book, defined by its 'Title' is hated if
+    book(ISBN,Title,_),	  %there is a book with the title 'Title'. We 
+    					  %save the ISBN to use in the next line
+    author(Author,ISBN),  %Author is the author of the book with isbn 'ISBN'
+    hates(Author,ISBN).	  %the author 'Author' hates the book with isbn 'ISBN'
+    
+%hated_books will succeed if all 3 lines succeed
+
+%query : 
+%hated_books(Title) 
+%results : 
+%Title = 'The art of Prolog'    %first success
+%false							%no other succees
+</div>
+
+<div class="nb-cell query" name="q2">
+%we could also directly call the following query : 
+book(ISBN,Title,_),hates(Person,ISBN),author(Person,ISBN).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+3) Formulate a query to retrieve the names of the books together with their author. Make Prolog print for each result a line like this: the book booktitle is written by author name *
+</div>
+
+<div class="nb-cell program" name="p4">
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+print_books_and_author(Title, Author) :-
+    book(ISBN,Title,_),
+    author(Author,ISBN),
+    %print :
+    write('The book '),
+    write(Title),
+    write('is written by '),
+    write(Author).
+    
+%run the query : ? - print_books_and_author(Title, Author)
+</div>
+
+<div class="nb-cell query" name="q3">
+%again, we can also define a single query like this : 
+author(Person,ISBN),book(ISBN,Title,_),write('The book '),write(Title),write(' is written by '),write(Person).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+4) Write a predicate proud_author/1 which succeeds for all people that own at least one of the books they have written.
+</div>
+
+<div class="nb-cell program" name="p5">
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+proud_author(Author) :-
+	book(ISBN,_,_),
+    author(Author,ISBN),
+    owns(Author,ISBN).
+</div>
+
+<div class="nb-cell markdown" name="md6">
+5) Create a knowledge base which translates your current (book) KB to your native language. Or other language than English. That is, in Irish, for example, 'book' is 'leabhar' and your task is to automate the translation of your current KB to ... eg., Irish. You should not manually rewrite every fact with the different name! You should also not translate the actual book titles etc., instead you should be able to query your KB in your native language.
+</div>
+
+<div class="nb-cell program" name="p6">
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+%so, we should transform all the predicates in an other language
+%for example, french
+
+livre(X, Y, Z) :- book(X, Y, Z) .
+personne(X) :- person(X).
+auteur(X,Y) :- author(X,Y).
+deteste(X,Y) :- hates(X,Y).
+possede(X,Y) :- owns(X,Y).
+
+%now, we can do queries in french. Try, to find all authors : 
+% ?-personne(Auteur)
+</div>
+
+<div class="nb-cell markdown" name="md7">
+6) How would you represent knowledge of libraries having copies of certain books? Try to think of multiple representations, discuss pros and cons. Implement the best representation and test it on some queries. ***
+</div>
+
+<div class="nb-cell program" name="p7">
+book(1,'The art of Prolog',400).
+book(23,'The mistery of Strawberries',42).
+person('Statler').
+person('Waldorf').
+author('Statler',1).
+author('Waldorf',23).
+hates('Statler',1).
+owns('Waldorf',23).
+
+%we will introduce a new predicate : 
+
+bookcopy(ISBN, LibraryName, CopyID) %ISBN for the ISBN of the book
+									%LibraryName for the name of the library, i.e.
+									%Library of KU Leuven
+									%CopyID for the ID of the copy of the book
+									%indeed, since we will have several copies 
+									%of the same book in the library, we must 
+								    %have an ID to differenciate these books
+</div>
+
+<div class="nb-cell markdown" name="md8">
+# Session 2: Recursion (No PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%in this exercice session, we will see how to program recursive predicates
+%Consider the following problem: we want to compute the sum of all digits 
+%in a given number. For instance, if the number is 26, we should return 8 (=2 + 6);
+% if the number is 13758, we should return : 1+3+7+5+8 = 24.
+
+%how can we do it ? while loop ? for loop ?
+%in prolog, there is NO such loops
+%--&gt; solution : recursive programming !
+
+%Recursion : define the solution of the complete problem
+%in terms of solving a smaller variant of the same problem. 
+%--&gt; Recursion = the way of doing ITERATION in prolog
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%solution to the intro exercice%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%2 cases : 
+%
+% - base case : 
+%			the number is a simple digit (un seul chiffre)
+% - recursive case : 
+%           the number is a number 
+%			we will reduce the problem to a simpler variant of the same
+%			problem (thanks to recursion), i.e. a number with one digit less 
+%			by taking off the last digit of the number
+
+
+%base case
+count(Number,Number) :-    %the count of Number is Number if 
+	Number&lt;10.			   %Number is smaller than 10
+
+%recursive case
+count(Number,Sum) :-      					 %the count of Number is Sum if 
+    Number&gt;=10,			 					 %Number is greater or equal than 10
+    split_number(Number, Digit, NewNumber),  %split number is to define after
+    										 %from Number, we take off Digit and	
+    										 %we obtain NewNumber
+    count(NewNumber, TmpSum),                %We call recursively call on NewNumber
+    										 %the result of the recursive call is stored
+    									     %in TmpSum
+    Sum is TmpSum + Digit. 					 %then, the Sum is just TmpSum + the Digit
+										     %we have taken off
+										     
+%we have still to define the predicate split_number : 
+split_number(Number,Digit,NewNumber) :-
+	Digit is mod(Number,10),    %first, we compute the modulo between the number and 
+    							%10
+    							%so, for example, if Number = 11
+    							%mod(Number,10) = 1 because when we do 11/10,
+    							%we have a rest of '1'
+    							%if Number = 212, mod(Number,10) = 2 
+    							%--&gt; we always obtain the last digit of the number !
+	NewNumber is Number//10.    % then we use : ‘//’ which is integer division
+								%if Number = 212, Number//10 = 21
+								%if Number = 478, Number//10 = 47
+								%--&gt; we always obtain all the digits except the last one !
+
+
+%%%%%%REMARKS%%%%%%
+
+% smaller or equal : =&lt;
+% greater or equal : &gt;=
+% aritmetic equality : is
+% integer division :  //
+
+/*
+Now how can you find this kind of recursive definitions yourself? Essentially, 
+you have to think about how the big problem can be solved easily if you already 
+have a solution for a subproblem. Usually this subproblem is the same problem but 
+with a smaller input (a smaller number, a shorter list,...). E.g. the recursive 
+way of building a pile of N blocks is: build a pile of N-1 blocks, and put one 
+block on top of it. Also, remember that you should always include a definition 
+of the base case (the trivial non-recursive case, e.g. building a pile of 1 
+block is simply putting 1 block down)
+*/
+</div>
+
+<div class="nb-cell program" name="p2">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%CALL TREES%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%P.S.%%%%%%%%%%%
+%LOOK TO THE FOLDER 
+%OF PROLOG TO SEE
+%ONE PDF FOR THE EXECUTION TREE
+%FOR THE count PREDICATE 
+%
+%%%%%%%%%%%%%%%%%%%%%%
+%
+%let's also look quickly to how call trees
+%are constructed in Prolog
+%what happens when we do a query ?
+%well, a query is a sequence of 1 
+%or more goal (separated with ',' or ';')
+%to output an answer, Prolog has to satisfy
+%all the goal
+%each time it succeed, it output something
+%If the query contains variables, Prolog also 
+%try to find a set of instanciations for the 
+%variables for which the query is true
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%REMARK%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%
+%%%%%%%%%Remark 1%%%%%%%%%%
+%
+% Be aware that 'variant' is different than 
+% 'instanciation':
+% - variant : we substitute a variable by another variable
+% - instanciation : we substitute a variable by constant, ... (a term)
+
+%%%%%%%%%Remark 2%%%%%%%%%%
+
+% Be aware that the lexical scope of 
+% a variable is just one clause ! 
+% If X occurs in different clauses, it signifies different variables !!
+%ancestor(X, Z) :- parent(X, Z).
+%ancestor(X, Z) :- parent(X, Y), ancestor(Y, Z).
+%--&gt; the X in the 2 above lines are different variables ! 
+
+
+
+
+%%%%%%% Handle Goal Execution %%%%%%%%%%%
+
+
+% -  Start with the given sequence of goals (separated with ',' or ';')
+% -  Replace the first goal with a new set of goals using the facts (or the rules)
+% 	 of the dataset. I.e. by rules, we mean   ....  :-  ...
+% -  Do this until all the the goals are facts which are defined to be
+%	 true.
+
+
+%%%%%%Execution trace of a query / shape of a tree %%%%%%%%
+
+%see section 1.5 + chapter 2 of the book 
+
+%- the nodes of the tree are the goals 
+%- the root node is the initial query
+%- we go from one node to another (i.e) an edge when : 
+%      * we instanciate something in the clause
+%	   * the head of the goal in a node always
+%		 matches the first goal in the upper node.
+%- A path ends in a simple fact, marked with TRUE or FALSE
+%- We should consider all paths by backtracking
+</div>
+
+<div class="nb-cell markdown" name="md1">
+EXERCICES
+</div>
+
+<div class="nb-cell markdown" name="md2">
+1) solution for exercice 1 :
+</div>
+
+<div class="nb-cell program" name="p3">
+%for the énoncé, see slides because it is a bit long
+
+/*
+% the base case
+reverse('').  
+
+% the recursive case
+reverse(Word):- 
+	split_string(Word,First,Rest), %from Word, take off the first. We have the Rest then
+	reverse(Rest),				   %we call recursively the function on the rest
+	write(First).				   %we write the first
+    
+*/
+</div>
+
+<div class="nb-cell markdown" name="md4">
+2) exercice 2
+</div>
+
+<div class="nb-cell markdown" name="md3">
+* a*) write a predicate reach/2 which will succeed if two cities are reachable from one another. reach(brugge, leuven). should succeed.
+* b**) On the other hand reach(leuven, brugge). will not succeed. Give an explanation why and propose a solution.
+</div>
+
+<div class="nb-cell program" name="p4">
+direct_road(brugge, ghent).
+direct_road(ghent, antwerp).
+direct_road(ghent, brussels).
+direct_road(antwerp, brussels).
+direct_road(hasselt, leuven).
+direct_road(brussels, leuven).
+direct_road(mons, brussels).
+direct_road(mons, namur).
+direct_road(namur, liege).
+direct_road(bastogne, liege).
+
+
+%solution for a)
+
+%base case : 2 cities have a direct load
+
+reach(X,Y) :- direct_road(X,Y).
+    
+%recursive case : there is another city that have a link between
+
+reach(X,Y):-
+    direct_road(X,M),   %there is a direct road from X to M
+    reach(M,Y).		    %we can reach Y from M
+
+
+%solution for b)
+
+%reach(brugge, leuven) works well but reach(leuven, brugge) does not work !!!
+%the problem for this is that there direct_road(brugge, ghent) then 
+%direct_road(ghent, brussels) then direct_road(brussels, leuven).
+%BUT there is no direct_road from leuven to anywhere !!!
+%so, one solution that we can do is 
+
+% direct_road(X, Y):- direct_road(Y, X).
+
+%this way, if we have direct_road(brussels, leuven), we will also have
+% direct_road(leuven, brussels).
+</div>
+
+<div class="nb-cell query" name="q1">
+reach(brugge, leuven).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+3) Write a predicate all_even/1 taking as input a number. The predicate should succeed if all digits in that number are even, otherwise it should fail. Draw a call tree for all_even(2496).
+</div>
+
+<div class="nb-cell program" name="p5">
+%input is as number : can be a single digit or multiple digit
+
+%base case : N is a digit (&lt;10) and it is even
+all_even(N) :-
+    N &lt; 10,
+    even(N).
+
+%recursive case : N is a number (&gt;=10)
+all_even(N) :-
+	N &gt;=10,
+    split_number(N, Digit, NewNumber),    %we take of one digit from Number
+    										   %what we have left is "NewNumber"
+    even(Digit),							   %the digit is even
+	all_even(NewNumber).					   %we call the function recursively on 
+											   %NewNumber
+											   %P.S. : split_number has already been
+											   %defined in the intro (see aboveà
+
+%We still need to define the predicate even 
+even(N):-
+	A is mod(N,2), %the number N is even if its modulo with 2
+	A = 0. 		   %is zero  (so when it is divided by 2 there are no rest)
+
+%Split number has already been defined in the intro above
+%let's just copy paste it
+
+split_number(N,Digit,NewNumber) :-    
+	Digit is mod(N,10), 
+	NewNumber is N//10.
+</div>
+
+<div class="nb-cell query" name="q2">
+all_even(488)
+</div>
+
+<div class="nb-cell program" name="p6">
+%%%%%%for the call tree%%%%%%s
+%see handwritten note for this exercice
+</div>
+
+<div class="nb-cell markdown" name="md6">
+4) Write a predicate count_even/2 taking as input parameter a number. The output parameter should be the number of even digits in the input number. E.g. count_even(24,A) should result in A being 2; count_even(25,A) should result in A being 1. Draw a call tree for these two examples.
+</div>
+
+<div class="nb-cell program" name="p7">
+%base case : the number is a single digit
+
+count_even(N,1):-   %in this case, we return directly 1 : it is the number of even digits
+    N&lt;10,
+    even(N).
+
+%recursive case : the number is a number
+
+
+count_even(N,Count):-
+    N&gt;=10,
+    split_number(N, Digit, NewNumber),
+    even(Digit),
+    count_even(NewNumber,RecursiveCount),
+    Count is RecursiveCount + 1.
+
+%We still need to define the predicate even 
+even(N):-
+	A is mod(N,2), %the number N is even if its modulo with 2
+	A = 0. 		   %is zero  (so when it is divided by 2 there are no rest)
+
+
+%Split number has already been defined in the intro above
+%let's just copy paste it
+
+split_number(N,Digit,NewNumber) :-    
+	Digit is mod(N,10), 
+	NewNumber is N//10.
+</div>
+
+<div class="nb-cell program" name="p8">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%SOLUTION PROFESSOR%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%my solution works well, but it does not work when 
+%the given number contains odd digits
+%it only works when all digits are even
+
+
+%base case : the number is a single digit
+count_even_prof(Number,1):-  	%return '1' if the digit is even
+	Number&lt;10,
+	even(Number).
+count_even_prof(Number,0):-  	%return '0' if the digit is odd (so it is NOT even)
+	Number&lt;10,
+	not(even(Number)).          %NOT to say that the number is NOT even
+
+
+%recursive case : the number is a number
+count_even_prof(Number,Count):- 
+	Number&gt;=10,
+        split_number(Number,Digit,NewNumber),
+	DigCount is mod(Digit+1,2),  % this is a small 'trick': 
+    							 % DigCount will be 1 if Digit is even, 0 otherwise
+	count_even_prof(NewNumber,NumCount),
+	Count is DigCount + NumCount.
+
+
+
+%We still need to define the predicate even 
+even(N):-
+	A is mod(N,2), %the number N is even if its modulo with 2
+	A = 0. 		   %is zero  (so when it is divided by 2 there are no rest)
+
+
+%Split number has already been defined in the intro above
+%let's just copy paste it
+
+split_number(N,Digit,NewNumber) :-    
+	Digit is mod(N,10), 
+	NewNumber is N//10.
+</div>
+
+<div class="nb-cell program" name="p9">
+%%%%%%%%%%%%%%%%%%%%
+%%%%%%CALL TREE%%%%%
+%%%%%%%%%%%%%%%%%%%%
+
+%see handwritten notes
+</div>
+
+<div class="nb-cell markdown" name="md7">
+5) voir solution, c'est un exo un peu inutile
+</div>
+
+<div class="nb-cell markdown" name="md8">
+6) The Fibonacci numbers are defined as follows:
+* The first two Fibonacci numbers are both 1.
+* The Nth Fibonacci number (with N&gt;2) is the sum of the N-1th and the N-2th Fibonacci number. Note that this is a recursive definition.
+</div>
+
+<div class="nb-cell markdown" name="md9">
+Write a predicate fib/2 having as an input parameter an integer N and as an output parameter the Nth Fibonacci number. In which respect is this recursion different from the previous exercises? What is the result of fib(5,F)? Is the way you calculate Fibonacci numbers efficient? Why or why not?
+</div>
+
+<div class="nb-cell program" name="p10">
+%base case when N = 1 or N = 2. In these cases, FibNumber = 1
+fib(N,1) :-
+    N is 1;
+    N is 2.
+
+%recursive case : 
+fib(N,FibNumber):-
+    N&gt;2,
+    N1 is N-1,
+    N2 is N-2,
+    fib(N1, FibNumber_1),
+    fib(N2, FibNumber_2),
+    FibNumber is FibNumber_1 + FibNumber_2.
+    
+%%%%%REMARK !!!!!!!!%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%find the errors there : 
+
+/*
+%recursive case : 
+fib(N,FibNumber):-
+    N&gt;2,
+    fib(N-1, FibNumber_1),   %First error : we cannot give 'N-1' as argument like this
+    						 %because internal it will not do the arithmetic 'is'
+                             %it will try do do matching withj '='
+                             %so, we need to define this N-1 outside, with N1 is N-1
+                             %for example and give N1 as argument
+    fib(N-2, FibNumber_2),   %same error here
+    FibNumber = FibNumber_1 + FibNumber_2.  %here, the error is that we use '=' instead
+    										%of 'is'
+*/
+</div>
+
+<div class="nb-cell markdown" name="md10">
+7)Exercise 7 ***:
+* Write a predicate double_digit/1 taking as an input a number. It should succeed if the number contains at least 2 equal digits, otherwise it should fail. E.g. doubledigit(12345) should fail; doubledigit(13423) should succeed.
+</div>
+
+<div class="nb-cell program" name="p11">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%Cet exo, je l'ai pas trop compris%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</div>
+
+<div class="nb-cell markdown" name="md11">
+* Repeat this exercise with the extra constraint that the two equal digits must occur next to each other.
+</div>
+
+<div class="nb-cell markdown" name="md12">
+# Session 3: Lists (No PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%this session is about lists
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%Recursive definition of lists%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%In prolog, lists are in fact nested pairs ! 
+%so, they are defined in a recursive way
+
+%a list in prolog can be 
+% - just the empty list  : []
+% - a pair where the second element is a lit 
+%		in this case : 
+%			* A pair containing a and b is denoted as .(a,b). 
+%			* a list with three elements a, b and c is denoted as .(a, .(b, .(c,[]) ) )
+%						in this example, we have to think in this way 
+%							.(a, X) where X = .(b, M) where M = .(c,[])
+
+
+
+
+%A list can contain anything as elements: constants, variables and ... lists! 
+%We illustrate this by showing a list that contains three elements: 
+%'a', 'a list (containing 'b' and 'c')' and 'd': 
+%		.(a, .(.(b,.(c,[])),.(d,[]))).
+%this list correspond to : [a, [b, c], d]
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1) Is a pair that somewhere contains the empty list a list?
+</div>
+
+<div class="nb-cell program" name="p2">
+%solution : 
+
+%NO !  
+%Not every pair that somewhere contains a list 
+%is a list itself. For example .([],1) is a pair which 
+%is not a list although it contains the empty list 
+%(it is not a list because the second element of the pair is not a list).
+
+%to be a list, the condition is to have a list as the second elem of the pair
+%for example, .(1,[]) is a list
+</div>
+
+<div class="nb-cell program" name="p3">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%Shorthand notation for lists%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%the notation .(a, .(b, .(c,[]) ) ) becomes very complicated for 
+%longer list
+
+%so, we will define a shorter notation
+
+% empty list []   --&gt; stay the same : []
+% a list with one element .(a,[]) --&gt; becomes [a]
+% a list two elements .(a,.(b,[])) --&gt; becomes [a,b]
+</div>
+
+<div class="nb-cell markdown" name="md2">
+2) Consider the following queries (if you like you can of course try these out on your computer later). Will these queries succeed? If so, what will be the variable bindings? If not, why does it fail? If you are not sure, draw the tree representations of the lists.
+
+* ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B].
+* ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B,C].
+* ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B,C,D].
+</div>
+
+<div class="nb-cell program" name="p4">
+%first one :
+
+%the list is : [a,[b,c],d]
+%A = a    --&gt; [a] 
+%B = .(.(b,.(c,[])),.(d,[]))  --&gt; [[b,c],d]
+%---&gt; FAIL 
+%B cannot be [[b,c],d] if we define the list as [A,B]
+%
+%However, if we run [A|B]
+%it succeed ! 
+%in this case, B = [[b,c],d]   --&gt; B is the tail and can be a list
+
+%Other thing that can succeed : ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B,C].
+%in this case : 
+%A = [a]
+%B = [b,c]
+%C = [d]
+%
+%%in the query terminal, you can try : 
+%'[|]'(a, '[|]'('[|]'(b,'[|]'(c,[])),'[|]'(d,[]))) = [A,B].   --&gt; fail
+%'[|]'(a, '[|]'('[|]'(b,'[|]'(c,[])),'[|]'(d,[]))) = [A|B].   --&gt; succeed
+%'[|]'(a, '[|]'('[|]'(b,'[|]'(c,[])),'[|]'(d,[]))) = [A,B,C]. --&gt; succeed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%second one 
+%A = a --&gt; [a]
+%B = .(.(b,.(c,[]))  --&gt; [b,c]
+%C = .(d,[]))        --&gt; [d]
+%---&gt; SUCCEED
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%third one 
+%A = a 
+%B = b
+%C = ?
+%---&gt; FAIL
+</div>
+
+<div class="nb-cell program" name="p5">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%Head Tail Notation%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%.(a,b) is also written as [a|b] where a is the head and b the tail
+% the head can be anything : constant, lists, ...
+% the tail has to be a list
+%[a,b] means the same as .(a,.(b,[])) or [a|[b|[]]] or [a|[b]].
+
+
+%purpose of this notation : 
+
+
+%--&gt; makes it easy to split list
+%For instance suppose we have a list [a,b,c,d] and we want to 
+%split it up into its head (first element: a) and its tail 
+%(the rest: [b,c,d]). We can do this by typing something like 
+%?- [Head | Tail] = [a,b,c,d].
+%Because [a,b,c,d] means the same as [a | [b,c,d]], 
+%the result is that 
+% - Head is a 
+% - Tail is [b,c,d]. 
+% We will use things like this often when we are writing 
+% recursive predicates. Finally note that the tail of a list 
+% is always a list itself (this follows from the definition of lists).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+3) Exercise 3 Consider the following queries (if you like you can of course try these out on your computer later). Will these queries succeed? If so, what will be the variable bindings? If not, why does it fail? If you are not sure, draw the tree representations of the lists.
+
+* ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A|B].
+* ?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B|C].
+* ?- [ a, b | [] ] = [ H | T].   
+* ?- [ a, b, c] = [ E1, E2 | T ].
+* ?- .(a, .(b, .(c,.(d,[])))) = [A,B|C].
+* ?- X = a,   Y = [ 1, [2,3] ], Z = [X | Y].
+* ?- X = a,   Y = [ 1, [2,3] ], Z = [X,Y]. 
+* ?- X = [a], Y = [ 1, [2,3] ], Z = [X,Y].
+</div>
+
+<div class="nb-cell program" name="p6">
+%first one : 
+%?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A|B].
+%list : [a,[b,c],d]
+%A = a 
+%B = [[b,c],d]
+%--&gt; succeed 
+
+%second one 
+%?- .(a, .(.(b,.(c,[])),.(d,[]))) = [A,B|C].
+%list : [a,[b,c],d]
+%A = a
+%B = [b,c]
+%C = c
+%--&gt; succeed 
+
+%third one 
+%?- [ a, b | [] ] = [ H | T].
+%list : [a,b]
+%H = a 
+%T = b
+%--&gt; succeed 
+
+%4th one
+%?- [ a, b, c] = [ E1, E2 | T ].
+%E1 = a 
+%E2 = b 
+%T = c
+%--&gt; succeed 
+
+%6th one 
+%?- X = a, Y = [ 1, [2,3] ], Z = [X | Y].
+%Z = [a|[1,[2,3]]] = [a,1,[2,3]]
+%--&gt; succeed 
+
+%7th one 
+%?- X = a, Y = [ 1, [2,3] ], Z = [X,Y].
+%Z = [a,[1,[2,3]]]
+%--&gt; succeed 
+
+%8th one 
+%?- X = [a], Y = [ 1, [2,3] ], Z = [X,Y].
+%Z = [[a], [ 1,[2,3]]]
+
+%%%%%%REMARK%%%%%
+%be aware that the 6th one, the 7th one and the 8th one 
+%are different ! 
+%look ate the position of the [  ]
+</div>
+
+<div class="nb-cell program" name="p7">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%List processing%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% a list is define recursively
+%to proccess lists, we also have to do recursive programming
+
+%recursive programming : 
+%
+%- a 'basic' clause that is non-recursive and deals with the most 
+%  simple problem,
+%  
+%- one or more recursive clauses that usually specify how a 
+%  problem of size N can be solved if we have a solution for 
+%  the problem of size N-1
+
+%in the list case 
+
+%- basic clause usually (but not always!) specifies how to solve 
+%  the problem for the empty list. 
+%  
+%- The recursive clause usually specifies how to solve the problem 
+%  for the complete list if we have a solution for the tail 
+%  of the list.
+
+%example : predicate that, given a list, counts the number of 
+%		   elem in that list (=length of the list)
+%		   
+
+% if I know that the tail has N elements, I know that the list 
+% itself must have N + 1 elements
+% 
+%base case : empty list, length = 0
+listLength([],0).
+
+%recursive case
+listLength([H|T],Length):-
+    listLength(T,PartialLength),  %we call it recursively on the 
+    							  %tail. The result is stored 
+    							  %in PartialLength
+    Length is PartialLength +1.   %Length is PartialLength +1
+								  %P.S. : first do the recursive
+								  %to obtain PartialLength then
+								  %Length is defined as being
+							      %the sum of PartialLength +1
+</div>
+
+<div class="nb-cell markdown" name="md4">
+4) do the queries succeed ? if yes, what is N or L
+
+* ?- listlength([1,[2,3]],N). 
+* ?- listlength([1|[2,3]],N).
+* ?- listlength(L,4).
+</div>
+
+<div class="nb-cell program" name="p8">
+%?- listlength([1,[2,3]],N). 
+% the list here is [1,[2,3]]
+% --&gt; length of 2
+% --&gt; N = 2
+
+%?- listlength([1|[2,3]],N)
+% the list here is [1,2,3]
+% --&gt; length of 3
+% --&gt; N = 3
+
+%?- listlength(L,4).
+%the program here will be in generation mode
+%it will try generate a list of length 4 
+%for example : L = [_1678, _1684, _1690, _1696]
+
+
+%%%%%%%%%%%%%%REMARK%%%%%%%%%%%%%%
+%in the solution, they draw a call tree for each of these clauses
+%but I will not do it for now because I am short of time
+%maybe to do later
+</div>
+
+<div class="nb-cell markdown" name="md5">
+5)Exercise 5: The predicate listlength/2 calculates the length of the list. Now write a predicate that, given a list of numbers, calculates the sum of all these numbers. Then write a predicate for calculating the average. Can you do this by traversing the list only once?
+</div>
+
+<div class="nb-cell program" name="p9">
+%%%%%%%%%%%%%%%%%
+%%%%SUM%%%%%%%%%%
+%%%%%%%%%%%%%%%%%
+
+%base case : empty list, sum = 0
+listSum([],0).
+
+%other base case : single elem : sum = elem
+listSum([H],H).
+
+
+%recursive case
+listSum([H|T],Sum):-
+    listSum(T,PartialSum),  
+    Sum is PartialSum + H.    %REMARK : we take the head and not the 
+							  %         the tail !!!!
+							  %        Indeed, if we take the tail
+							  %        we will have a list which will
+							  %        not work to do addition
+							  %      on the other hand, the Head 
+							  %     is a single elem
+
+
+%%%%%%%%%%%%%%%%%%
+%%%%AVERAGE%%%%%%%
+%%%%%%%%%%%%%%%%%%
+
+
+%base case : Avg = 0 for empty list
+listavg([],0).
+%recursive case 
+listavg([H|T],Avg):-
+	listsumlength([H|T],Length,Sum),
+	Avg is Sum/Length.
+
+%we still need to define listsumlength
+%that will compute the sum and the length
+
+%base case
+listsumlength([],0,0).   %length = sum = 0
+
+%recursive case 
+listsumlength([A|Rest],Length,Sum):-
+	listsumlength(Rest,Length1,Sum1),
+	Length is Length1 + 1 ,    %length : we increment
+	Sum is Sum1 + A.		   %sum : we add the head
+</div>
+
+<div class="nb-cell markdown" name="md6">
+6) Exercise 6: LOA is a game comparable to checkers. The board consists of squares. Each square can be filled with a white or black disk, or be empty. Suppose that we represent a row on the board as a list where each element is either the atom w (white disk), the atom b (black disk) or the atom n (no disk). Define the predicate countdisk/2 that given a row, returns the number of disks on that row. What is the answer to the following queries? What if you ask for for all answers using ';' ?
+
+* ?- countdisk([w,b,n,n],Count).
+* ?- countdisk([w,b,n,n],2).
+* ?- countdisk([w,b,n,n],4).
+* ?- countdisk(List,Count).
+</div>
+
+<div class="nb-cell program" name="p10">
+%base case 
+countdisk([],0).
+
+%recursive case
+%when the head H is w or b, we increment count
+%if Head = n, we don't increment Count
+%and we recall recursively the function on the tail
+%P.S. : we HAVE to call it recursively even for 
+%when the head is equal to 'n' because in we don't do 
+%that the function will stop when it sees a 'n' !!
+
+
+countdisk([H|T],Count):-
+    H = w,
+    countdisk(T,Count1),
+    Count is Count1 + 1.
+
+countdisk([H|T],Count):-
+    H = b,
+    countdisk(T,Count1),
+    Count is Count1 + 1.
+
+countdisk([H|T],Count):-
+    H = n,
+    countdisk(T,Count).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%REMARK%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+%classical errors to avoid : 
+
+% 1) when calling a function recursively on the tail,
+%    we call it this way : countdisk(T,Count1)µ
+%    --&gt; DO NOT USE BRACKET AROUND T : [T] will not work !
+
+% 2) incrementing is doing with 'is' : Count is Count1 + 1.
+</div>
+
+<div class="nb-cell program" name="p11">
+%?- countdisk([w,b,n,n],Count).
+%result : Count = 2
+
+%?- countdisk([w,b,n,n],2).
+%result : True
+
+%?- countdisk([w,b,n,n],4).
+%Result : False
+
+%?- countdisk(List,Count).
+%Here, it is a bit tricky
+%we have not defined List nor Count
+%but in fact, the prolog will generate different List and Count
+/*
+Count = 0,
+List = []
+Count = 1,
+List = [w]
+Count = 2,
+List = [w, w]
+Count = 3,
+List = [w, w, w]
+*/
+
+%?-countdisk(List,3).
+%this will generate a list like : 
+%List = [w, w, w]
+</div>
+
+<div class="nb-cell markdown" name="md7">
+7) We store a LOA game as a list of all moves (in chronological order). A move (starting from one position on the board, going to another position) is represented with a move functor with 4 arguments: the first and second argument are the column (a letter) and row (a number) of the from-position; the third and fourth argument are the column and row of the to-position. 
+
+E.g. we can have the following game: [move(b,1,b,3), move(c,6,c,8), move(b,3,b,5)]. In this game the first player moved from b1 to b3, then the second player moved from c6 to c8 and then the first player moved from b3 to b5.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+* Write a predicate that, given a movelist, calculates the number of 'rounds' played in the game. With 'round' we mean one move of each of the two players (unless at the end of the game). E.g. the movelist [move(b,1,b,3), move(c,6,c,8), move(b,3,b,5)] is from a game with two rounds.
+* Write a predicate that splits a given movelist into two lists: one with the black moves, the other with the white moves. Keep in mind that a movelist can contain an odd number of moves (like in the movelist given above).
+* Write a predicate that given a list with the moves from black and a list with the moves from white, merges both into a chronological movelist.
+</div>
+
+<div class="nb-cell program" name="p13">
+%predicate for counting number of round 
+
+%base case 
+roundsNumber([],0).  %empty list : 0 round 
+
+%other base case
+roundsNumber([H], 1). %single element list : 1 round
+
+%recursive case 
+
+roundsNumber([_, _ |T],Count) :-
+	roundsNumber(T, TmpCount),
+	Count is TmpCount + 1.
+</div>
+
+<div class="nb-cell program" name="p12">
+%predicate to black moves and white moves 
+
+%base case
+split([],[],[]).
+%other base case
+split([A],[A],[]).
+
+%recursive case 
+split([A,B|T],[A|T1],[B|T2]):-
+	split(T,T1,T2).				
+
+%Pour le reste, revoir cet exo parce que je l'ai un peu fait en deuspy
+</div>
+
+<div class="nb-cell markdown" name="md13">
+# Session 4: Lists and How to use the tracer (PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%In this session, we continue on Lists
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%REMARK%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%j'ai passé bcp d'exos vers la fin (exs 3 - 4 - 5)
+%à revoir si nécessaire
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1) Define predicates for:
+
+* Retrieving the first element of a list: first(Element, List)
+* Retrieving the last element of a list: last(Element, List)
+* Removing in a list one element equal to T: remove(T, List, NewList)
+* Removing in a list ALL elements equal to T: remove_all(T, List, NewList)
+* Removing in a list of numbers all elements smaller than or equal to N: smaller(N, NumberList, NewNumberList)
+* Switching the first two elements of a list: switch_first_two(List, NewList). For example a call to switch_first_two([a,b,c,d,e,f], L) should return L = [b,a,c,d,e,f]
+* Switching every pair of elements in a list: switch_every_two(List, NewList). For example a call to switch_every_two([a,b,c,d,e,f,g], L) should return L = [b,a,d,c,f,e,g]
+</div>
+
+<div class="nb-cell program" name="p2">
+%first(Element, List) 
+first([],[]).
+first(H,[H|T]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%last(Element, List)
+last([H],[H]).
+last(LastElem, [_|T]):- 
+    last(LastElem,T).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%remove(T, List, NewList)
+%the goal is to remove the Tail of a list
+remove(_, [], []).
+remove(El, [El|Tail], Tail).
+remove(El, [Head|Tail], [Head|Tail2]):-
+    not(El=Head), % could also be solved with other constructions
+	remove(El, Tail, Tail2). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+remove_all(_, [], []).
+remove_all(El, [El|Tail], Tail2):- 
+	remove_all(El, Tail, Tail2).
+remove_all(El, [Head|Tail], [Head|Tail2]):-
+	not(El = Head),
+	remove_all(El, Tail, Tail2).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%remove all number smaller than N : 
+
+%base case 
+smaller(_, [], []).
+
+%recursive case 
+smaller(N, [M|Tail], Tail2):-
+	 M =&lt; N, 					%when the Head is smaller than N 
+	 smaller(N, Tail, Tail2).   %we remove it and call the function
+								%recursively on Tail2
+								%the ouput of the predicate is Tail2
+								%so, we have indeed removed the
+								%head
+
+smaller(N, [M|Tail], [M|Tail2]):-
+     M &gt; N,                     %When the head is NOT smaller than N
+	 smaller(N, Tail, Tail2).   %We call the function recursively 
+								% on Tail2
+								%the ouput of the predicate is 
+								%[M|Tail2]
+								%so, we have indeed NOT removed the
+								%head
+								%but we need to define that so
+								%the recursive call continue 
+								%even if the elem is not smaller
+								%than N (so, we just go to the 
+								%next elem)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%Exercice ci haut assez intéressant%%%%%%%
+%%%%Bien comprendre ce qui se passe %%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+%
+%switch_first_two(List, NewList)
+%predicate that remove the first two elem of a list 
+switch_first_two([],[]).
+switch_first_two([H,M|T],T). %we take H,M and we output just T
+
+%--&gt; no need to recursive call ! 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%switch_every_two(List, NewList)
+%swith every pairs of elem
+%For example a call to switch_every_two([a,b,c,d,e,f,g], L) 
+%should return L = [b,a,d,c,f,e,g]
+
+%--&gt; we need a recursive call, because we would consider 
+%all pairs in the list !
+
+switch_every_two([], []).
+switch_every_two([H|T], NewList):-
+    switch_every_two(T,[T|H]).
+
+switch_every_two([X, Y|Tail], [Y, X|Tail2]):-  %input is 
+    										   %[X, Y|Tail]
+    										   %output is
+    										   % [Y, X|Tail2])
+    										  
+	switch_every_two(Tail, Tail2). %we call recursively the 
+								   %predicate on the 2 tails
+								   %Tail is input and Tail2 output
+</div>
+
+<div class="nb-cell markdown" name="md2">
+2)Exercise 2: sorting a list
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Write a predicate that takes as input a list and switches the first pair of numbers in this list for which the first number is larger that the second:
+switch_unsorted(NumberList, NewNumberList). For example, ?- switch_unsorted([1,2,4,7,6,9,8], L).should switch the 7 and the 6 and should hence return L = [1,2,4,6,7,9,8]. If there is no unsorted pair then no numbers should be switched.
+</div>
+
+<div class="nb-cell program" name="p3">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%SORTING A LIST%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%base case : we switch
+switch_unsorted([H,M|Tail], [M,H|Tail]) :-
+    H &gt; M.
+
+%recursive case : for the other elems (where M &gt;= H), we keep looking
+%				  until we will fall in the base case (where H &gt; M)
+
+switch_unsorted([H,M|Tail], [H|RTail]) :-
+    H =&lt; M,
+    switch_unsorted([M|Tail],RTail).
+</div>
+
+<div class="nb-cell program" name="p4">
+%write a predicate that applies sorting switch_unsorted 10 times
+%note that switch_unsorted looks for only the first unordered pairs
+%so, with ten_times, we will look for the first 10 pairs : 
+
+
+ten_times(NumberList0, NumberList10):-
+	switch_unsorted(NumberList0, NumberList1), %output : NumberList1
+	switch_unsorted(NumberList1, NumberList2), %input is output of 
+    											%previous line (Number
+    											%List1)
+    						
+	switch_unsorted(NumberList2, NumberList3),
+	switch_unsorted(NumberList3, NumberList4),
+	switch_unsorted(NumberList4, NumberList5),
+	switch_unsorted(NumberList5, NumberList6),
+	switch_unsorted(NumberList6, NumberList7),
+	switch_unsorted(NumberList7, NumberList8),
+	switch_unsorted(NumberList8, NumberList9),
+	switch_unsorted(NumberList9, NumberList10).
+
+
+%How can we have a shorter definition than ten_times ?
+%instead of writing ten times 'switch_unsorted', we 
+%will call recursivelu 'switch_unsorted' ten times ! 
+
+
+ten_times_2(List1,List2):-
+	switch_N_times(List1,List2,10).  %we call switch_N_times with 10
+								     %as parameters
+
+switch_N_times(L,L,0).
+switch_N_times(L1,L2,N):-            %switch_N_times has N as param
+	N&gt;0, 
+	switch_unsorted(L1,Tmp),		 %
+	Next is N-1,					 %we start from N and go until 0
+	switch_N_times(Tmp,L2,Next).	 %we call it recursively
+</div>
+
+<div class="nb-cell program" name="p5">
+%is_sorted(NumberList) : test if a list is sorted 
+
+%base case 
+is_sorted([]).
+is_sorted([_]).
+
+%recursive case 
+is_sorted([H,M|Tail]) :-   %the list [H,M|Tail] is sorted if
+    H =&lt; M,				   %H is smaller than M
+    is_sorted([M|Tail]).   %we call it recursively on M and the tail
+						   %to compare M with the next elem
+						   %So, for a list [1,2,3]
+						   %H=1 , M=2 --&gt; true
+						   %then, call recursively on M --&gt; M=2
+						   %becomes the head : H=2
+						   %M=3 --&gt; H =&lt; M --&gt; True
+</div>
+
+<div class="nb-cell program" name="p6">
+%write a program that sort a list until it is sorted 
+
+%--&gt; we will use switch_unsorted and is_sorted that we 
+%have already defined 
+
+
+%base case : 
+mySort(List,List):-   %we output List
+	is_sorted(List).  %if the List is already sorted
+
+%recursive case 
+mySort(List,Result):-	
+	not(is_sorted(List)),		 %When the list is not Sorted
+	switch_unsorted(List,Temp),  %we do the switching
+	mySort(Temp,Result).		 %we call the function recursively
+</div>
+
+<div class="nb-cell markdown" name="md4">
+3)Exercise 3: nested lists
+</div>
+
+<div class="nb-cell program" name="p7">
+%given a list of lists, flatten the list
+%for example, [[a,b,c], [d,e,f]] becomes [a,b,c,d,e,f]
+
+%--&gt; the predicate Append does that ! 
+%append([[a,b,c], [d,e,f]], M) --&gt; M = [a, b, c, d, e, f]
+
+%but let's define a predicate ourself µ
+
+%first, note that 
+%?- [[a,b,c], [d,e,f]] = [H|T]
+% --&gt; : 
+%H = [a, b, c],
+%T = [[d, e, f]]
+
+flatten_list_of_lists([], []).
+flatten_list_of_lists([List|Lists], Result):-
+	flatten_list_of_lists(Lists, Result1),
+	conc(List, Result1, Result).
+
+conc([],X, X).
+conc([H|T], X, [H|T1]):-
+	conc(T, X, T1).    
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%REMARK%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%I don't know if this exercice is really relevant
+%so, I did not focus really on it
+%to re-work if needed
+</div>
+
+<div class="nb-cell markdown" name="md5">
+4)Exercise 4: sets
+* we will represent a set with a list
+* a set cannot contain 'doublons' : it contains each element only once !
+</div>
+
+<div class="nb-cell program" name="p8">
+% empty_set(Set)
+% returns an empty set, or check if the set is empty
+% when the argument is instantiated.
+empty_set([]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%member_of_set(Element, Set) % true if the element is a member
+
+%base case
+member_of_set(Element, [Element|_]). %Element is the head
+
+%recursive case
+member_of_set(Element, [H|T]):-
+	member_of_set(Element, T).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%add_to_set(Element, Set, NewSet) 
+% add an element to a set
+
+add_to_set(Element, Set, [Element|Set]):-  %we add elem in front 
+    not(member_of_set(Element, Set)).  %we add only if it is not 
+                                       %already a member of the set
+   
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%delete_from_set(Element, Set, NewSet)
+% delete the element from the set if it occurs, otherwise
+% leave the set unchanged
+
+%base case : elem is the head 
+%--&gt; after deleting, we have just the Tail
+delete_from_set(Element, [Element|Tail], Tail).
+
+%other base case : elem is not a member of the set 
+%%---&gt; set is unchanged 
+delete_from_set(Element, [Y|Tail], [Y|Tail]) :-
+    not(member_of_set(Element, [Y|Tail])).
+
+%recursive case 
+delete_from_set(Element, [Y|Tail], [Y|Tail1]) :-
+    member_of_set(Element, [Y|Tail]),
+    delete_from_set(Element, Tail, Tail1).
+
+%%%%%%%%%%%%%%%%%%%
+%%REMARK%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%
+
+%For delete from set;
+%the code is inspired of the one from the Bratko book,
+%page 68
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Now define the following predicates:
+
+
+union_set(Set1, Set2, Union)
+
+intersect_sets(Set1, Set2, Intersection)
+
+union_list_of_sets(Sets, Union) 
+% The first argument contains a list of sets 
+%  of which the union has to be computed.
+
+difference_set(Set1, Set2, Difference)
+% Difference contains all elements from Set1 not a member of Set2.
+</div>
+
+<div class="nb-cell program" name="p9">
+%à revoir si nécessaire, j'ai juste
+%copier coller la solution
+
+union_set([], Set, Set).
+union_set([Element|Set1], Set2, Union):-
+        add_to_set(Element, Set2, Set3),
+        union_set(Set1, Set3, Union).
+
+intersect_sets([], _, []).
+intersect_sets([Element|Set1], Set2, [Element|Intersection1]):-
+        member_of_set(Element, Set2),
+        intersect_sets(Set1, Set2, Intersection1).
+intersect_sets([Element|Set1], Set2, Intersection):-
+        not(member_of_set(Element, Set2)),
+        intersect_sets(Set1, Set2, Intersection).
+
+difference_set([], _, []).
+difference_set([Element|Set1], Set2, Difference):-
+        member_of_set(Element, Set2),
+        difference_set(Set1, Set2, Difference).
+difference_set([Element|Set1], Set2, [Element | Difference1]):-
+        not(member_of_set(Element, Set2)),
+        difference_set(Set1, Set2, Difference1).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+5) write a code that transpore a matrix
+</div>
+
+<div class="nb-cell program" name="p10">
+%à revoir si nécessaire, j'ai juste
+%copier coller la solution
+
+split_matrix([], [], []).
+split_matrix([[A|B]|C], [A|First], [B|WithoutFirst]):-
+	split_matrix(C, First, WithoutFirst).
+	
+transpose([[]|_], []).
+transpose(Matrix, [FirstColumn|TransposedRestMatrix]):-
+        % FirstColumn will become the first row in the transposed matrix
+	split_matrix(Matrix, FirstColumn, RestMatrix),
+	transpose(RestMatrix, TransposedRestMatrix).
+</div>
+
+<div class="nb-cell markdown" name="md14">
+# Session 5: Mixing products and Playing with cubes (No PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+member(X,[X|T]).
+member(X,[H|T]) :- member(X,T).
+</div>
+
+<div class="nb-cell program" name="p2">
+%resolution of one exercice from session 5
+%with a data with products that react with each other and gave a penalty
+%vinegar and salt react with a penalty of 25 : very dangerous mix
+%salt and water react with a penalty of just 3 : it is not very dangerous
+
+%the goal of this exercice is to find the penalty of a mixture of several element
+%For example, [vinegar, salt, water]
+%to find that, we will look whihc of the combinations listed as prolog fact
+%react(...) are listed in the list [vinegar, salt, water]
+%for example, in [vinegar, salt, water], the combination
+%reacts(vinegar,salt,25). and reacts(salt,water,3). occurs : 
+%the total penalty is 28
+
+reacts(vinegar,salt,25).
+reacts(salt,water,3).
+reacts('brown soap',water,10).
+reacts('pili pili', milk,7).
+reacts(tonic,bailey,8).
+%?- advice([vinegar,salt,water]).
+/*
+ * first try to figure out how to tackle the problem
+ * simulate the approach with pen and paper
+ * [vinegar,salt,water] 
+ * we will unify it with a head an tail list :  [H|T]
+  H=vinegar   T = [salt, water]   
+  Check whether H reacts with the elements in Tail (and sum their penalties)
+  - vinegar/salt is in the list 
+  -vinegar/water is not in the list
+  then, recursively, salt become the head and water the tail
+  H=salt  T =[water]
+  -salt/water is not in the list
+  then, recursively, water become the head and the tail is the empty list
+  H=water T =[]
+  -water/[] is not in the list
+  end of the search. Now, we need to compute the penalty 
+  
+  ?- penalty([water,salt,vinegar],K).
+  */
+penalty([],0). % base case
+%recursive case
+penalty([H|Tail] , Pen) :-
+    	check(H, Tail, PH), %Check whether H reacts with the elements in Tail 
+    						%and that give PH : penalty_head
+        penalty(Tail, PT), %we call the predicate penalty recursively 
+    					   %on the tail,that gives the penalty for 
+                           %the tail PT : penalty-tail
+        Pen is PH + PT.%penalty is the sum 
+
+check(E,[],0).
+check(E, [H|T], Pen) :-
+    	reaction(E,H,P1),!, %we wheck if E reacts with H
+        check(E,T, P2),     %recursive call on the tail
+        Pen is P1 + P2.
+check(E, [H|T], P) :- %we check elem compared to [H|T], and we have 
+    				  %a penalty
+        check(E,T, P).
+      
+
+reaction(E,H,P) :-
+    reacts(E,H,P)
+    ;    
+    reacts(H,E,P).
+
+
+%Compute the message : 
+
+message(N,'This is a mixture for which no irritation is expected'):-
+	N=&lt;5.
+message(N,'This mixture could cause minor irritation, be careful'):-
+	N=&lt;12, 
+	N&gt;=6.
+message(N,'This mixture causes minor burning wounds, do not use this!'):-
+	N=&lt;20, 
+	N&gt;=13.
+message(N,'Warning: this mixture causes severe burning wounds, never use this!'):-
+	N=&lt;30, 
+	N&gt;=21.
+message(N,'WARNING!! This is a potential lethal mixture!'):- 
+	N&gt;30.        
+
+%Now, let's define the predicate "advice" that is the 'top'
+%predicate
+advice([H|Tail]) :-
+    penalty([H|Tail],Pen),  %we compute the penalty
+    message(Pen, Message),  %we deduce the message thanks to Pen
+    write(Message),nl.		%We write the message (write is a 
+							%build-in, no need to define it)
+</div>
+
+<div class="nb-cell markdown" name="md1">
+3) Stacking cube
+</div>
+
+<div class="nb-cell program" name="p3">
+%Cette exercice a l'air super long et compliqué 
+%: je le passe pour l'instant
+</div>
+
+<div class="nb-cell markdown" name="md2">
+4) Designing Cubes
+</div>
+
+<div class="nb-cell markdown" name="md15">
+# Session 6: Accumulators and Graphs (No PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%ACCUMULATORS AND GRAPHS%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%in this session, we see accumulators and graphs
+
+/*
+An often used technique in Prolog is that of using an accumulating 
+parameter: we gradually accumulate a result in a parameter
+and we return this result when we arrive in the base case. 
+An advantage of accumulating parameters is that they can be used to 
+make a program 'tail-recursive' (roughly speaking, a program is 
+tail-recursive if the recursive call is at the very end in the body 
+of the recursive clause). This is good because a tail-recursive 
+program uses less memory than its non-tail-recursive counterpart.
+
+Sometimes using an accumulating parameter also makes a program faster.
+
+*/
+
+
+%let's compare a classical program with a program using an accumulator
+%for this purpose, consider the following task : reversing a list
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%without accumulator 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%base case 
+reverse([], []).
+
+%recursive case
+reverse([Head|Tail], Reversed):-
+        reverse(Tail, TailReversed),
+        append(TailReversed, [Head], Reversed). %reversed = 
+												%TailReversed +
+												%Head
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%With accumulator
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+reverse(List, Reversed):-
+        reverse_acc(List, Reversed, []). % the accumulater is initial empty
+
+
+reverse_acc([], Result, Result). % Return the result (=the accumulated data)
+
+reverse_acc([Head|Tail], Result, Acc):-
+        reverse_acc(Tail, Result, [Head|Acc]).
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1) list_lenght with accumulator
+</div>
+
+<div class="nb-cell program" name="p2">
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%Without acc%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+list_length([],0).
+list_length([H|T],L) :-
+	list_length(T,L1),
+	L is L1+1.
+*/
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%With acc%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+list_length(List,Length) :- list_length_acc(List,Length,0).
+									%here, we call the acccumulated version
+									%the '0' is for the accumulator
+									%it is initialized to '0' 
+
+list_length_acc([],Acc,Acc).           %here, when we reach the last elem of 
+									   %the list (which is the empty list), we
+									   %save the acc (3rd argument) into the 
+									   %length (2nd argument)
+list_length_acc([H|T],Length,Acc) :-
+    Acc1 is Acc +1,					  %at each elem, acc is incremented
+    list_length_acc(T,Length,Acc1).   %Recursive call always at the end of 
+									  %of the clause when using accumulator !
+</div>
+
+<div class="nb-cell markdown" name="md2">
+2) quick sort with accumulator instead of conc
+</div>
+
+<div class="nb-cell program" name="p3">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%Quick sort with Conc%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+quicksort([], []).
+quicksort([X | Tail], Sorted):-
+	split(X, Tail, Small, Big),
+	quicksort(Small, SortedSmall),
+	quicksort(Big, SortedBig),
+	conc(SortedSmall, [X| SortedBig], Sorted).
+
+split(X, [], [], []).
+split(X, [Y| Tail], [Y | Small], Big):-
+	gt(X, Y), !,
+	split(X, Tail, Small, Big).
+split(X, [Y| Tail], Small, [Y | Big]):-
+	split(X, Tail, Small, Big).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%Quick sort with Acc%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</div>
+
+<div class="nb-cell markdown" name="md3">
+3) Fibonnaci with Acc
+</div>
+
+<div class="nb-cell program" name="p4">
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%Fib without Acc%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+%base case when N = 1 or N = 2. In these cases, FibNumber = 1
+fib(N,1) :-
+    N is 1;
+    N is 2.
+
+%recursive case : 
+fib(N,FibNumber):-
+    N&gt;2,
+    N1 is N-1,
+    N2 is N-2,
+    fib(N1, FibNumber_1),
+    fib(N2, FibNumber_2),
+    FibNumber is FibNumber_1 + FibNumber_2.
+    
+*/
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%Fib with Acc%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%the trick here is to use 2 accumulatorcs (3rd and 4th argument of the 
+%fib_acc predicate
+%Why ?  Remember the definition of a fibonacci numbers : it is the 
+%sum of the 2 precedent fibonacci numbers ! 
+
+%the fib_acc is defined with 5 arguments : 
+%-The first argument is which step we are in 
+%-The second argument is which fibonacci number we want to compute.
+%-The third argument is the fibonacci number for the previous step 
+%-The fourth argument is the fibonacci number for the current step.
+%-The fifth argument is the solution
+
+%we know the in an accumulated version, the solution is updated in the base
+%case of the accumulated predicate, so here : 
+%fib_acc(N,N,_,Result,Result).
+%this means that : 
+%when the first arg (step) is equal to the second arg (number of fibonacci
+%we want to compute), we save the 4th argument (fibonacci for current step)
+%into the 5th argument, which is the solution. This is done by naming the 
+%2 arguments the same, i.e. 'Result'
+
+
+fib(N,FibNumber):-	fib_acc(1,N,0,1,FibNumber).
+
+fib_acc(N,N,_,Result,Result).
+fib_acc(Count,N,PreviousFib,CurrentFib,Result):-
+	Count &lt; N,
+	NextCount is Count + 1,
+	NextFib is CurrentFib + PreviousFib,
+        fib_acc(NextCount,N,CurrentFib,NextFib,Result).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+4) write get_doubles : a predicate that extract from a list all elem that occur at least twice
+</div>
+
+<div class="nb-cell program" name="p5">
+%the idea here is to have 2 accumulators%
+%one for the elem we have seen only once so far
+%one for the elem that we have seen 2 time or more
+%the accumulator will be lists ! They will be initialized to the empty list
+
+get_doubles(List, Doubles):-
+        get_doubles_acc(List, Doubles, [], []).
+				%first [] : acc for elem we have seen once 
+				%second [] : acc for elem we have seen 2 time or more
+				%----&gt; both initialize to the empty list []
+
+
+%definition of the acc 
+
+%base case where the result is saved 
+get_doubles_acc([], Doubles, _, Doubles). 
+			%here, the 4 arg, i.e. the list where we add all elem that 
+			%appears 2 times or more become the solution (2nd argument)
+
+get_doubles_acc([Elem|T],Result,Singles,Doubles):- 
+        member(Elem,Doubles), !,   %if the elem we saw is already in the Doubles
+    							 %list, it means we have saw him already twice
+    							 %or more, so we just pass it and do nothing
+        get_doubles_acc(T,Result,Singles,Doubles).
+
+get_doubles_acc([Elem|T],Result,Singles,Doubles):-
+        member(Elem,Singles), 	%if the elem we saw is already in the Singles
+    							%list, it means we have saw him already ones,
+    							%and now, we saw him again so it means in total
+    							%we saw him twice. We need to remove it from
+    							%the Singles list and add it to the Doubles list
+        remove(Elem,Singles,NewSingles), !,
+    							    %Elem is removed from Singles
+        get_doubles_acc(T,Result,NewSingles,[Elem | Doubles]). 
+									%Elem is added at the head of the Doubles 
+									%list
+								    %remark that we call here get_doubles_acc
+									%recursively with the new Singles list
+									%and the new Doubles list ([Elem|Doubles])
+
+get_doubles_acc([Elem|T],Result,Singles,Doubles):- 
+    					% if we have not seen Elem before
+         get_doubles_acc(T,Result,[Elem | Singles],Doubles).
+					    %we add it as the head of the Singles list
+</div>
+
+<div class="nb-cell program" name="p6">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%GRAPHS%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+We can represent a (connected) directed graph as a list of arcs. 
+A directed arc going from a node a to a node b is represented as a/b. 
+So the list [a/c,c/d,c/e,b/d,d/e] represents a graph with 5 nodes and 
+5 arcs.
+*/
+</div>
+
+<div class="nb-cell markdown" name="md5">
+1)Write a predicate arc(From,To,Graph) that succeeds if Graph contains a directed arc starting at From going to To.
+</div>
+
+<div class="nb-cell program" name="p7">
+arc(From,To,Graph) :-      %this query succeed if in the list Graph (in the form
+    					   %[a/c, c/d, ...], there is an elem From/To
+    member(From/To, Graph).%From/To is a member of graph
+</div>
+
+<div class="nb-cell markdown" name="md6">
+2)Write a predicate connected(X,Y,Graph) that succeeds if there is a connection between X and Y (by any number of arcs).
+</div>
+
+<div class="nb-cell program" name="p8">
+%here again, we consider graphs with the notation [a/c,c/d,c/e,b/d,d/e]
+%
+%the solution will be : 
+% - there is a connection if it is the same node 
+%- there is a direct link from X to M and there is a connection between M and Y
+
+
+%base case : direct link from X to Y
+connected(X,X,Graph).   %if start node = goal node, connected is true.
+
+%recursive case :
+connected(X,Y,Graph) :-
+    arc(X,M,Graph),        %arc has been defined before : means that we have a 
+    					   %direct link between X and M
+    						
+    connected(M,Y,Graph).  %recursive call on M
+</div>
+
+<div class="nb-cell markdown" name="md7">
+3)Write a predicate find_path(X,Y,Graph,Path) that succeeds if there is a connection between X and Y and that additionally returns the list of nodes that this connection passes through.
+</div>
+
+<div class="nb-cell program" name="p9">
+%this time, we should also use an accumulator where we add the visited nodes
+%another possible solution is to append to a list (but it is not efficient)
+
+%we just recopy the 'arc' predicate that we hade defined 
+%before because we will need it 
+
+arc(From,To,Graph) :-      
+    member(From/To, Graph).
+
+
+
+%definition of the acc
+find_path(X,Y,Graph,Path) :- find_path_acc(X,Y,Graph,Path,[]).
+								%[] is the acc for the path
+    							%initialized to the empty list
+
+%base case of the acc : we have reached the goal node,
+%i.e., the head of the acc [] is the goal node (we will
+%add new visited node at the head)
+    
+find_path_acc(X,Y,Graph,[Y|Tail],[Y|Tail]).
+							%when the 5th argument is which is the visited 
+							%nodes is [Y|Tail], where Y is the goal, 
+							%it means that we have reached the goal. Then,
+							%we copy it to the 4th argument which is the path
+
+%recursive call of the acc :
+
+find_path_acc(X,Y,Graph,Path,PathAcc) :-
+    arc(X,M,Graph),      %arc has been defined before : means that we have a 
+    					   %direct link between X and M
+    						
+    find_path_acc(M,Y,Graph,Path,[M|PathAcc]).  %recursive call on M
+											    %we add M at the head of the 
+											    %visited nodes, i.e. Path Acc
+</div>
+
+<div class="nb-cell markdown" name="md8">
+4)Directed graphs can be cyclic (i.e. contain a loop): e.g. [a/b,b/c,c/a,d/c]. This might cause the connected/3 and find_path/4 predicates above to loop forever! Adapt your definition of these predicates such that they never loop.
+</div>
+
+<div class="nb-cell program" name="p10">
+%to avoid loop, when visiting a new node, we need to look if the node has already
+%been visited or not. 
+
+%in fact, we just have to add, in the recursive case :
+%not(member(Z,PathAcc)),
+
+%recursive call of the acc :
+
+find_path_acc(X,Y,Graph,Path,PathAcc) :-
+    arc(X,M,Graph),      %arc has been defined before : means that we have a 
+    					   %direct link between X and M
+    not(member(M,PathAcc)), % &lt;------ only difference						
+    find_path_acc(M,Y,Graph,Path,[M|PathAcc]).  %recursive call on M
+											    %we add M at the head of the 
+											    %visited nodes, i.e. Path Acc
+</div>
+
+<div class="nb-cell markdown" name="md9">
+5)A graph can be undirected. In an undirected graph, an arc between X an Y can be used to go from X to Y as well as from Y to X. Adapt the programs above such that they can handle undirected graphs. (Hint: you can solve this by adapting only one of the predicates above !)
+</div>
+
+<div class="nb-cell program" name="p11">
+%Very easy !
+%remember that the Graph is defined as follows : 
+%[a/c,c/d,c/e,b/d,d/e]
+
+%so, we will change the 'arc' predicate and say that there is an 
+%arc between 'From' to 'To' if From/To is a member of the graph OR 
+%To/From is a member of the Graph
+
+arc(From,To,Graph) :-
+	member(From/To,Graph);
+    member(To/From,Graph).
+</div>
+
+<div class="nb-cell markdown" name="md16">
+# Session 7: Meta-predicates (findall) and a classification problem (PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%INTRO%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%until now, our programs have returned one single solution
+%--&gt; Prolog tries to satisfy a query
+%			--&gt; if one solution is found, we stop
+
+
+% How to collect all possible solutions ? 
+
+%---&gt; meta predicate 'findall' !!
+% can be used at the exam ! 
+
+
+%findall allows us to retrive all solution to a query
+%instead of clicking on 'next'
+</div>
+
+<div class="nb-cell program" name="p2">
+%syntax of findall
+
+/*
+findall(Template, Goal, List).
+• Template: which part of the query you want to store
+		--&gt; i.e. what do we want to find of the quarty
+            if the code is something like : 
+            
+            p(Graph,Node) :-                   
+                    member(Parent/Node,Graph),
+           
+            and we want to find all parents, then template = Parent
+        
+• Goal: the query for which we want results
+• List: in which the results are stored
+*/
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% example%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%we want all the lists L1 and L2
+%Which concatenation results in a list in the form [a,b,c]
+%
+%if we use append, append(L1,L2,[a,b,c]) is one goal, we will obtain one 
+%answer but there is  4 possibilities
+%if we want to collect all answers in a list
+%we will use find all
+
+%
+findall(L1 - L2  ,append(L1,L2,[a,b,c]), K).
+
+%"L1 - L2" : we will just place the answer in the form [...] - [...], where
+%... are L1 and L2 --&gt; template of the answer 
+%
+%append(L1,L2,[a,b,c]) --&gt; goal, i.e.we want all the lists L1 and L2
+%which concatenation results in a list in the form [a,b,c]
+%
+%K --&gt; list where the result is stored 
+%
+%for example, for the call above, the anwser is : 
+%%K = [[]-[a, b, c], [a]-[b, c], [a, b]-[c], [a, b, c]-[]]
+%there are 4 pairs (L1 and L2 forms a pair) of solutions
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1) exercice on graphs
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Remember the representation of directed graphs given in Session 6: we represent a directed graph as a list of arcs. An arc going from a node a to a node b is represented as a/b. E.g. the list [a/c,c/d,c/e,b/d,d/e] represents a graph with 5 nodes (a, ..., e,) and 5 arcs. We call a node X a parent of node Y if there is an edge from X to Y (e.g. the parents of d in the above graph are c and b).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Using this representation, what does the following predicate p/2 do?
+
+p(Graph,Node) :- member(Parent/Node,Graph), write(Parent), nl, fail.
+
+p(_Graph,_Node) :- write('end').
+
+
+Try it out on your computer.
+</div>
+
+<div class="nb-cell program" name="p3">
+%p.s. : 
+%'nl' Write a newline character to the current output stream.
+%--&gt; retour à la ligne
+
+p(Graph,Node) :-                   %giving a graph and a node
+    member(Parent/Node,Graph),     %we look if there is a pair Parent/Node in 
+    							   %the graph, e.g. :
+    							   %member(c/e,[a/c,c/d,c/e,b/d,d/e]) will
+    							   %succeed
+    							   %--&gt; allows us to find parent of Node
+    write(Parent), nl, fail.	   %we write the parent, and do a 'retour à la
+								   %ligne with 'nl'
+
+p(_Graph,_Node) :- write('end').
+
+%example = 
+%p([a/c,c/d,c/e,b/d,d/e],e)  will print : 
+/*
+c
+d
+end
+true
+*/
+</div>
+
+<div class="nb-cell markdown" name="md4">
+now, instead of printing the parent, write a predicate that store the parents in a list
+</div>
+
+<div class="nb-cell program" name="p4">
+%We have to use findall ! 
+%I think that it is also possible to do with an accumulator
+%but let's do it with findall instead 
+
+
+all_parents(Graph,Node,ParentList) :-
+	findall(Parent,member(Parent/Node,Graph),ParentList).
+	%template ?: Parent  --&gt; it is what we want to put in the list
+	%list ?  --&gt; ParentList --&gt; where we put all the 'Parent'
+	%goal ? --&gt; member(Parent/Node,Graph) --&gt; same as in the previous predicate
+											  %p(graph, node).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Write a predicate shortest_path(X,Y,Graph,ShortestPath) that finds the shortest path between two nodes X and Y in Graph. To solve this exercise you can use the predicate find_path_2/2 that we defined in Session 6. Remember that the meaning of this predicate was the following: find_path_2(X,Y,Path,Graph) succeeds if Path is the path between X and Y in Graph.
+</div>
+
+<div class="nb-cell program" name="p5">
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%Find_path%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+arc(From,To,Graph) :-      
+    member(From/To, Graph).
+
+
+
+%definition of the acc
+find_path(X,Y,Graph,Path) :- find_path_acc(X,Y,Graph,Path,[]).
+								%[] is the acc for the path
+    							%initialized to the empty list
+
+%base case of the acc : we have reached the goal node,
+%i.e., the head of the acc [] is the goal node (we will
+%add new visited node at the head)
+    
+find_path_acc(X,Y,Graph,[Y|Tail],[Y|Tail]).
+							%when the 5th argument is which is the visited 
+							%nodes is [Y|Tail], where Y is the goal, 
+							%it means that we have reached the goal. Then,
+							%we copy it to the 4th argument which is the path
+
+%recursive call of the acc :
+
+find_path_acc(X,Y,Graph,Path,PathAcc) :-
+    arc(X,M,Graph),      %arc has been defined before : means that we have a 
+    					   %direct link between X and M
+    						
+    find_path_acc(M,Y,Graph,Path,[M|PathAcc]).  %recursive call on M
+											    %we add M at the head of the 
+											    %visited nodes, i.e. Path Acc
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%Shortest Path%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%je l'ai nexté pour l'instant, à revoir si il faut
+
+shortest_path(From,To,Graph,ShortestPath):-
+        findall(Path,find_path_2(From,To,Graph,Path),Paths),%find all path
+        Paths = [FirstPath|OtherPaths], % fails if no path exists
+        length(FirstPath,L),
+        find_shortest(OtherPaths,FirstPath,L,ShortestPath).
+
+% Find shortest path given all paths using accumulating parameters:
+find_shortest([],ShortestPath,_,ShortestPath).
+
+find_shortest([Path1|Paths],_TmpShortestPath,TmpLength,ShortestPath):-
+        length(Path1,Length1), Length1 &lt; TmpLength, !,
+        find_shortest(Paths,Path1,Length1,ShortestPath).
+
+find_shortest([_|Paths],TmpShortestPath,TmpLength,ShortestPath):-
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Mixing products (again) but with 'findall'
+</div>
+
+<div class="nb-cell program" name="p6">
+%je l'ai nexté
+</div>
+
+<div class="nb-cell markdown" name="md7">
+The classification problem
+</div>
+
+<div class="nb-cell program" name="p7">
+%je l'ai nexté, il a l'air vraiment compliqué pour un examen
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Extra exercise on lists
+</div>
+
+<div class="nb-cell markdown" name="md9">
+(This a regular exercise on lists and does not involve findall.)
+
+The 'LOA' game uses a square board to play on. Suppose that we represent a board as a list of lists, where each of the inner lists represents a row. We use the atom b to indicate a black disk at a certain board position, the atom w to indicate a white disk and the atom o to indicate an open board position. A LOA-board is 'valid' if and only if the board is square with width 8 and each position is either open (o) or filled with a black disk (b) or a white disk (w).
+Write a predicate validboard/1 that succeeds if its argument is a valid LOA-board and fails otherwise. Can you use validboard/1 also to create a valid LOA-board?
+</div>
+
+<div class="nb-cell program" name="p8">
+%so, a board is in the form 
+%[[row1],[row2],[row3]]
+%w : white disk
+%b : black disk
+%o : open position
+%each row has a width of 8
+%board is square --&gt; we have 8 rows
+%a board is valid if all positions are filled with 
+%w,b or o
+%e.g. : 
+%%[[w,b,w,w,b,w,o,w],[w,b,w,o,o,b,b,w],...]
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%REMARK ON LIST OF LISTS%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%be aware that when you have a list of lists,e.g. :
+
+%[[a,b,c], [d,e,f], [g,h,i]] 
+
+%To select each list in the list of lists, we can simply do : 
+%[[a,b,c], [d,e,f], [g,h,i]] = [List|Lists]
+%  --&gt; List : Head, i.e. [a,b,c]
+%  --&gt; Lists : Tail, i.e. [[d,e,f],[g,h,i]]
+%by doing a recursive call, we can select all list in the list of lists
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%solution of the exercice%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%my first idea was to use the idea given above, i.e. that : 
+%[[a,b,c], [d,e,f], [g,h,i]] = [List|Lists]
+
+%but by adding another level of 'head|tail', in order to :
+% -select first elem of first list, check is member of w,b,o
+% -select second elem of first list, check is member of w,b,o
+% -...
+% -select second elem of second list, check is member of w,b,o
+% -...
+
+%with something like : 
+/*
+validboard([[H|T]|Lists]]) :-    %the idea here is 
+    member(H,[w,b,o]),
+    validboard([T|Lists]).
+*/
+
+%but this way, it is hard to do recursion on the elem inside the list
+%and on the list inside of the list of lists in a single clause
+%so, I decide to follow the solution of the prof, i.e. use multiple clause
+
+
+%first check if there is 8 rows
+validboard(Board):-      %B is the board. It is a list of lists
+	length(Board,8),     %We first check if the number of rows should be 8
+	validrows(Board).    %then, we call validrows to check if each row is valid
+
+
+%then, check if each Row is valid
+validrows([]).        
+validrows([Row|OtherRows]):-    %[[a,b,c], [d,e,f], [g,h,i]] = [Row|OtherRows]
+    							%--&gt;Row = [a,b,c],OtherRows=[[d,e,f],[g,h,i]]
+	length(Row,8),              % each row should have 8 elements
+	allmember(Row,[b,w,o]),     % each element should be b, w or o
+	validrows(OtherRows).		%call recursively on OtherRows
+
+
+%we still need to define all member
+allmember([],_).
+allmember([H|T],List):-   %all member is true if 
+	member(H,List),       %the head is a member of list
+	allmember(T,List).	  %call recursively on the tail
+			%Note that
+			%in the validrows predicate, we call allmember this way : 
+			%allmember(Row,[b,w,o])
+			%so : 
+			%H : first elem of a Row (a list in the list of lists, i.e. Board)
+			%List : [b,w,o]
+</div>
+
+<div class="nb-cell markdown" name="md17">
+# Session 8: Solving sudoku puzzles (No PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%Session 8: Solving sudoku puzzles%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%a sudoku is a puzzle with 9x9 size
+%so, there is 81 cells
+%see picture on the énoncé
+
+%the rules are 
+
+/*
+- no row contains the same number twice (or more)
+- no column contains the same number twice
+- no small square of 3x3 size contains the same number twice
+				%--&gt; see énoncé
+                
+In the initial puzzle, some of the numbers in the cells are given. 
+To solve the puzzle, you have to find all the remaining numbers. 
+Write a Prolog program that solves such a puzzle.
+*/
+</div>
+
+<div class="nb-cell program" name="p2">
+%see the énoncé for the figure
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Think about a high-level strategy to solve the problem. For now, don't worry about efficiency too much (that comes later).
+</div>
+
+<div class="nb-cell program" name="p4">
+/*
+The very easiest high-level strategy is to generate a number for each of the 81 
+cells, test whether these numbers satisfy all constraints and backtrack if 
+necessary. This is actually very inefficient, but let's worry about that later 
+and first get that basic strategy to work.
+*/
+</div>
+
+<div class="nb-cell markdown" name="md1">
+Think about a good representation of (the solution of) a sudoku puzzle.
+</div>
+
+<div class="nb-cell program" name="p3">
+/*
+We will represent a solution as a list of 81 numbers (elements 1 to 9 
+correspond to the first row, 10 to 18 the second row, ...).
+
+
+*/
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Write a Prolog program that solves a given puzzle, i.e. a program the fills in the missing numbers in the Sudoku. Do this by transforming your high-level strategy into Prolog code. Use non-existing predicates for lower level tasks.
+</div>
+
+<div class="nb-cell program" name="p5">
+solve(Sol) :-
+	generate(Sol),    %we generate a solution
+	test(Sol),		  %we test it
+	write(Sol), nl.   %we write the solution
+
+%Sol is at first a partially instanciated list (some elem are filled, others
+%are not defined yet). E.g. : 
+
+Sol = [_,_,_,2,3,_,_,_,5,_,4,2,_,9,_,_,_,3,3,_,_,_,_,8,7,_,_,_,_,7,_,_,_,_,5,
+       6,_,9,_,7,2,_,_,1,4,5,_,_,9,_,_,_,_,_,6,_,_,_,_,2,8,4,9,_,_,8,_,_,1,_,
+       _,7,2,5,_,_,_,9,6,_,_]
+
+%we also need to define generate and test
+
+generate([]).
+generate([H|T]) :-
+	% generate a value from 1 to 9 for the element H:
+	member(H,[1,2,3,4,5,6,7,8,9]), %we generate H from the list from 1 to 9
+	generate(T).                   %we call recursively to generate the rest
+
+
+%we also define test : it is the 'top level' 
+%test predicate. We will still need to define test2
+%just after
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%à revoir à partir de test2 car j'ai nexté
+%cet exo a l'air troooooooop long pour l'exam
+</div>
+
+<div class="nb-cell markdown" name="md18">
+# Session 9: Trees (PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+
+</div>
+
+<div class="nb-cell markdown" name="md22">
+## Trees
+We only consider binary trees here. You can find the definition of a binary tree in Bratko, Section 9.2, p. 226.
+</div>
+
+<div class="nb-cell query" name="q4">
+
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1.) Write a predicate count/2 that calculates the number of elements in a given tree (without using findall/3).
+</div>
+
+<div class="nb-cell program" name="p2">
+%remember the notation of a tree
+%t(L,V,R)
+/*
+where :
+- L : left subtree
+- V : root
+- R : right subtree
+%for example 
+%/%      7
+   /        \
+  nil        3
+            /    \
+           nil    nil
+%t(nil, 7, t(nil,3,nil))
+*/
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+/*
+%number of elem of a tree = number of elem left subtree 
+							+
+							number of elem right subtree
+							+	
+							1 (take the root also into account)
+
+*/
+
+
+count(nil,0).    %nil : empty tree --&gt; result = 0
+
+count(t(L,V,R),Result):-
+    count(L,ResultLeft),
+    count(R,ResultRight),
+    Result is ResultLeft + ResultRight + 1.
+</div>
+
+<div class="nb-cell markdown" name="md2">
+1.) Write a predicate depth/2 that calculates the depth of a given tree (the depth or 'height' is the length of the path from the root to the deepest node in the tree).
+</div>
+
+<div class="nb-cell program" name="p3">
+%depth of an empty tree is 0
+depth(nil, 0). 
+%depth D of an non-empty tree t(L,_V,R) is D : 
+depth(t(L,_V,R),D) :- 
+    depth(L,D1), %depth of left child (which is a subtree) is D1
+    depth(R,D2),  %depth of right child (which is a subtree) is D2
+    Max is max(D1,D2), 
+    D is Max +1.  
+
+/*
+	%P.S. : this code is the AND pattern
+	%depth of the whole tree going from the root is the Max of the depth of left children
+	%and right children +1
+	%indeed, consider this example : 
+       7
+   /        \
+  nil        3
+            /    \
+           nil    nil
+    %depth of left children is 1, depth of right children is 2
+	%to find the depth of the whole tree, we take "2" and we add 1, so we have "3"
+</div>
+
+<div class="nb-cell markdown" name="md3">
+3.) Write a predicate linearize/2 to collect all the nodes of a given tree in a list.
+</div>
+
+<div class="nb-cell program" name="p4">
+lin(nil,[]).
+lin(t(Left,Root,Right),Res):-
+	lin(Left,L),
+	lin(Right,R),
+	conc(L,[Root|R],Res).  %Res is the output list, resulting of the concatenation
+						   %of the left elem, root and right elem
+</div>
+
+<div class="nb-cell markdown" name="md4">
+4.) An 'open tree' is a tree in which some subtree is a variable (by the way: in the same way an 'open list' is defined as a list with a variable as a tail; we will see more about that later). An example of an open tree is given in Bratko, p.229: t(t(D1,3,D2),5,t(D3,8,D4)). Write a predicate close/1 that given a tree, closes all open subtrees (i.e. variables) in the tree by instantiating them with nil.
+</div>
+
+<div class="nb-cell program" name="p5">
+close(nil,nil).    %if the tree is nil, it says nil
+
+
+%In a 'normal' tree every leaf is nil. In an open tree, every leaf is 
+%either nil or an uninstantiated variable. To close an open tree, we have 
+%to replace all instantiated variables by in the leaves with nil.
+
+close(nil) :- !. % leaf
+close(t(Left,_,Right)):- % non-leaf
+	close(Left),
+	close(Right).
+
+%The first clause will be used for leaves, the second (recursive) 
+%clause will be used for non-leaves. This is how the first clause works: for a 
+%leaf containing nil, it will simply succeed; for a leaf containing an 
+%uninstantiated variable, it will instantiate this variable with nil 
+%and succeed. This is exactly what we need.
+</div>
+
+<div class="nb-cell markdown" name="md23">
+## Efficiently searching sorted lists
+Searching for an element in a list can be done by using the member/2 predicate. If you know that the given list is sorted, however, searching can be done more efficiently.
+
+1.) Write a predicate occur/2 that succeeds if the first argument occurs in the sorted list that is provided as second argument. Try to do this more efficiently than the member/2 predicate we used before.
+
+if the list is sorted a way of doing a search efficiently is to stop the search when the elem we are pointing in the list is greater than the elem we are looking for
+</div>
+
+<div class="nb-cell program" name="p6">
+%for example, we are looking for 3 in the list
+%[1,2,4,5], we will 
+%- first look at 1
+%-then at 2
+%-then, we we look at 4, we know that the elem '3' will not be in the list
+%because the list is sorted --&gt; we stop the search
+
+
+occur(Elem,[Elem|_]).
+
+occur(Elem,[H|T]) :-   
+    gt(Elem,H),   %continue the search while greater is true --&gt; Elem &gt; H
+    occur(Elem,T).
+
+gt(X,Y) :-
+    X &gt; Y.
+</div>
+
+<div class="nb-cell query" name="q5">
+trace, (   occur(4, [1, 2, 4, 5])).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+2.) When we search for an element in a sorted list, we have to compare the element we are looking for with all the elements that come before the element we are looking for. We can reduce this number of comparisons by not looking at each number in the ordered list, but only looking at the third number in the list: if this is greater than the number we are looking for, it must be one of the two numbers we skipped. Otherwise, skip again 2 numbers and compare etc. In this way we need on average only 1/3 of the comparisons of occur/2. Write a predicate occurthree/2 that performs the search in this way.
+</div>
+
+<div class="nb-cell program" name="p7">
+%so now, to go even faster, we will skip 2 numbers, 
+%compare the number we are pointing for with elem
+%...
+
+%we also define that if the Elem is the head or 
+%one of the 2 numbers we have skipped,
+%the output is true 
+occurthree(Elem,[Elem|_]).	
+occurthree(Elem,[_,Elem|_]).
+occurthree(Elem,[_,_,Elem|_]).
+
+occursthree(Elem, [H,M,I|T]):-  %we skip H and M  
+    gt(Elem,I),            %we compare to I 
+    occursthree(Elem,Tail).           %recursive call on the tail
+
+gt(X,Y) :-
+    X &gt; Y.
+</div>
+
+<div class="nb-cell markdown" name="md24">
+## Binary dictionaries
+</div>
+
+<div class="nb-cell markdown" name="md6">
+We can search very efficiently if we can immediately check the median of our list: if this median is not the element that we are looking for, we decide in which half of the list we have to search further, take the median of that half, and so on. This is the idea behind binary dictionaries as defined in Bratko (Section 9.2, p.228).
+
+In Bratko you can find definitions of predicates to search, insert and delete elements in such a binary dictionary. Now write a predicate sorted/1 that succeeds if the argument is a (correctly sorted) binary dictionary.
+</div>
+
+<div class="nb-cell markdown" name="md25">
+A naive inefficient version of this is as follows
+</div>
+
+<div class="nb-cell program" name="p8">
+sorted(nil).
+sorted(t(Left,Nr,Right)):-
+	smaller(Left,Nr),    %left subtree is smaller than root 
+    sorted(Left), 		 %Left subtree is sorted also (recursive call)
+	larger(Right,Nr),    %right subtree is greater than root
+    sorted(Right).       %right subtree is sorted also(recursive call)
+
+
+smaller(nil,_).
+smaller(t(Left,Node,Right),Nr):-   %a tree is smaller than the root Nr if
+	greater(Nr,Node),              %the root Nr is greater than the root Node
+    							   %of the subtree
+	smaller(Left,Nr),              %recursive call on the left
+	smaller(Right,Nr).             %and the right subtree of the tree
+
+larger(nil,_).
+larger(t(Left,Node,Right),Nr):-    %a tree is greater than the root Nr if
+	greater(Node,Nr),              %the root Node of the subtree is greater than
+    							   %the root Nr
+	larger(Left,Nr),               %recursive call on the left
+	larger(Right,Nr).              %and the right subtree of the tree
+
+greater(X,Y) :-
+    X &gt; Y.
+</div>
+
+<div class="nb-cell markdown" name="md26">
+A more efficient version is the following:
+</div>
+
+<div class="nb-cell program" name="p14">
+sorted_2(nil).
+sorted_2(t(Left,Nr,Right)):-
+	smaller_and_sorted(Left,Nr),
+	larger_and_sorted(Right,Nr).
+
+% smaller_and_sorted(Tree,Nr) succeeds if all numbers in 
+% Tree are smaller than Nr and Tree is ordered:
+smaller_and_sorted(nil,_).
+smaller_and_sorted(t(Left,Node,Right),Nr):-
+	gt(Nr,Node),
+	smaller_and_sorted(Left,Node),
+	between_and_sorted(Right,Node,Nr).
+	
+larger_and_sorted(nil,_).
+larger_and_sorted(t(Left,Node,Right),Nr):-
+	gt(Node,Nr),
+	between_and_sorted(Left,Nr,Node),
+	larger_and_sorted(Right,Node).
+
+% between_and_sorted(Tree,Low,High) succeeds if all numbers in 
+% Tree are greater than Low and smaller than High and Tree is ordered:
+between_and_sorted(nil,_,_).
+between_and_sorted(t(Left,Nr,Right),Low,High):-
+	gt(Nr,Low),
+	gt(High,Nr),
+	between_and_sorted(Left,Low,Nr),
+	between_and_sorted(Right,Nr,High).
+
+% As often, many other possible solutions exist.
+</div>
+
+<div class="nb-cell markdown" name="md27">
+## Balanced binary dictionaries
+</div>
+
+<div class="nb-cell markdown" name="md7">
+A balanced tree has the following property: for each each node in the tree it is the case that the depth of the left subtree differs at most one from the depth of the right subtree. Being balanced is an important property for a binary dictionary: it ensures access to an element in log(n) time, where n is the number of elements in the tree (see Bratko p.229).
+
+1.) Write a predicate `balanced/1` that succeeds if the given binary dictionary is balanced.
+</div>
+
+<div class="nb-cell program" name="p9">
+% a tree is balanced if the depth of left or right subtrees differ by at most one
+%also, both subtrees have to be balanced as well, i.e. the depth of their children
+%differ by at most one 
+
+%example of utilisation of the predicate :
+/*
+?- is_balanced(nil).
+true.
+?- is_balanced(t(nil,3,nil)).
+true.
+?- is_balanced(t(nil,3,t(nil,4,nil))).
+true.
+?- is_balanced(t(nil,3,t(nil,4,t(nil,2,nil)))).
+false. 
+*/
+
+%base case : nil tree is balanced
+is_balanced(nil).
+
+%recursive case
+is_balanced(t(L,V,R)) :- % the non-empty tree (t(L,V,R) is balanced IF : 
+    depth(L,D1),         %D1 is depth of the left subtree
+    depth(R,D2) ,        %D2 is depth of the right subtree
+    atmostonedifference(D1,D2),  %at most one different of the depth (defined below)
+	is_balanced(L), %then we call is balanced to the left and right subtrees
+    is_balanced(R). %because both has to be balanced aswell
+
+%let's define the predicate atmostonedifference
+atmostonedifference(D,D):-!. %if the depth are the same (D1=D2=D), atmostonedifference 
+						     %is directly true
+atmostonedifference(D1,D2) :-   %if they are not the same
+    (D1 is D2+1 ; D2 is D1 +1). %true if D1 is D2+1 OR D2 is D1 +1
+
+% atmostonedifference/2 can also be replaced by
+% Dif is Dl - Dr,
+% Dif &gt;= -1, Dif =&lt; 1,
+
+%let's also define depth
+%depth of an empty tree is 0
+depth(nil, 0). 
+%depth D of an non-empty tree t(L,_V,R) is D : 
+depth(t(L,_V,R),D) :- 
+    depth(L,D1), %depth of left child (which is a subtree) is D1
+    depth(R,D2),  %depth of right child (which is a subtree) is D2
+    Max is max(D1,D2), 
+    D is Max +1.
+</div>
+
+<div class="nb-cell markdown" name="md28">
+2.) Write a predicate `list_to_balanced/2` that given a sorted list with numbers, returns as an output a balanced binary dictionary containing all these numbers.
+</div>
+
+<div class="nb-cell program" name="p10">
+% second part of the question : defining a program that transform 
+% a list of number into a balanced binary dictionnary 
+
+list_to_balanced([], nil).
+list_to_balanced(List, t(Left, Middle, Right)):- %from list we create t(Left,Middle,Right)
+        length(List, N),   %length is stored in N
+    	N&gt;0,    
+        SplitPos is (N+1)//2, % // is integer division
+        split_list(List, SplitPos, Part1, Middle, Part2),
+        list_to_balanced(Part1, Left),
+        list_to_balanced(Part2, Right).
+
+
+% split_list(List, SplitPos, Part1, Middle, Part2) with List instantiated 
+% with a list, SplitPos instantiated with an integer and Part1, Middle 
+% and Part2 uninstantiated, split_list(List, SplitPos, Part1, Middle, Part2) 
+% will split List at the position SplitPos. Concretely, the result is that Middle 
+% will be instantiated to the element at position SplitPos, Part1 to the list 
+% with all elements to the left of position SplitPos, and Part2 to the 
+% list with all elements to the right of position SplitPos.
+
+split_list([H|T], 1, [], H, T).
+split_list([H|T], SplitPos, [H|T1], El, L2):-
+        SplitPos &gt; 1,
+        NewSplitPos is SplitPos-1,
+        split_list(T, NewSplitPos, T1, El, L2).
+</div>
+
+<div class="nb-cell markdown" name="md19">
+# Session 10: Sorting and Searching
+</div>
+
+<div class="nb-cell markdown" name="md7">
+## Merge sort
+</div>
+
+<div class="nb-cell markdown" name="md1">
+1.) write a predicate merge/3 that takes as first two arguments two lists where the elements are already sorted, and instantiates the third argument by merging the two lists in one sorted list.
+?-merge([3,5,8],[1,3,4,6,7,12,28],L).
+L = [1,3,3,4,5,6,7,8,12,28]
+</div>
+
+<div class="nb-cell program" name="p2">
+%so, the thing is that the elem in each sublist (list 1 and list 2) are already
+%sorted ! 
+
+
+gt(X,Y):- X &gt; Y.
+
+merge([],L,L).   %if first list [] and second list L, merged list is L
+merge(L,[],L).   %if first list L and second list [], merged list is L
+
+merge([H1|T1],[H2|T2],[H1|Res]):- %with input [H1|T1] and [H2|T2]
+    							  %the output is [H1|Res] if :
+    
+        gt(H2,H1), !,			  %gt(H2,H1) succeed
+    							  %moreover, because of '!' we will not check
+    							  %the other clause(where the output is 
+    							  %[H2|Res]
+    							  %however, if ! fails, we will check the 
+    							  %second clause
+    							  %so, when gt(H2,H1) is true, we do 
+    							  %merge(T1,[H2|T2],Res) and the other clause
+    							  %merge([H1|T1],[H2|T2],[H2|Res]) is 
+    							  %ignored
+    
+        merge(T1,[H2|T2],Res).    %when gt(H2,H1), we call merge recursively
+								  %on the tail
+								  %we merge T1 with H2|T2
+								  %indeed, because H2 is greater than H1,
+								  %we take off H1
+
+merge([H1|T1],[H2|T2],[H2|Res]):- %here, no need to add gt(H1,H2) because
+    							  %we have define a cut before ! 
+        merge([H1|T1],T2,Res).
+
+
+%%%%%%%%%%%%%%%%%%%
+%%REMARK%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%
+
+%important exam ! (j'ecrit ça pour pouvoir retrouver facilement après
+%en faisant ctrl+f hahaha
+
+/*
+merge([H1|T1],[H2|T2],[H1|Res]):- %with input [H1|T1] and [H2]
+        gt(H2,H1), !,
+        merge(T1,[H2|T2],Res).
+        
+ici, merge a 3 arguments
+il faut bien comprendre que ces 3 argument peuvent être des 
+inputs ou des outputs selon la façon dont on appelle merge
+par example, si je l'appelle comme : 
+
+merge([1,2,3], [4,5,6], Solution)
+--&gt; Solution est une variable ! ça sera un output de la fonction
+donc, Prolog va faire en sorte de trouver une instanciation pour Solution
+
+Same idea as concat predicate !!
+
+concat([1,2,3], [4,5,6], L)
+--&gt; L is the concatenation of [1,2,3] and [4,5,6]
+concat([1,2,3], L, [1,2,3,4,5,6])
+--&gt; L is the list that, when concatenated with [1,2,3], gives [1,2,3,4,5,6]
+--&gt; L is [4,5,6]
+
+*/
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%Remark on Cut%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+Let's look at an example 
+
+max(X,Y,Z):- X =&lt; Y, !, Y = Z. 
+max(X,Y,X).
+
+You can read this as follows:
+
+- When X =&lt; Y is true: 
+	Ignore the second clause of the predicate, and just unify Y and Z.
+- When X=&lt;Y fails :
+	consider the second clause max(X,Y,X).
+
+--&gt; The cut throws away choice points. 
+*/
+</div>
+
+<div class="nb-cell markdown" name="md2">
+write a predicate split/3 that takes as first argument a list, and splits this list in two lists of equal length (if the length is odd, the second argument is one element longer than the third).
+* ?-split([1,17,5,3,9],L,R).
+* L = [1, 5, 9]
+* R = [17, 3]
+</div>
+
+<div class="nb-cell program" name="p3">
+%we have to build to lists of the same size based on one list
+%in the example, it does that : 
+%consider the list [1,17,5,3,9]
+%we add 1 to list1
+%we add 17 to list2
+%we add 5 to list1
+%...
+
+split([],[],[]).
+split([M],[M],[]).
+split([X,Y|T],[X|T1],[Y|T2]):-
+    split(T,T1,T2).
+    
+	%from list [X,Y|T]
+	%we take 'X' for list1 ([X|T1])
+	%we take 'y' for list2 [Y|T2]
+	%then, recursive call on the tails
+</div>
+
+<div class="nb-cell markdown" name="md3">
+write a predicate mergesort/2 that takes as first argument a list and sort this list by splitting the list in two, sorting these two lists (with mergesort/2) and merging them back in one sorted list.
+* ?- mergesort([23,2,1,3,1],L).
+* L = [1,1,2,3,23]
+</div>
+
+<div class="nb-cell program" name="p4">
+%we will define a top mergesort predicate where we use split
+%and merge that we have defined before we still have to define a 'sort' argument
+
+mergesort(L,LSorted):-
+    split(L,L1,L2) 		  %we split L into L1 and L2
+    sort(L1,L2),   		  %we sort L1 and L2
+    merge(L1,L2,LSorted). %we merge L1 and L2 into LSorted
+
+mergesort([],[]). %first second is input list, second list is output list
+mergesort([X],[X]).
+mergesort([X,Y|T],S):-            %if the list has at least 2 arguments
+        split([X,Y|T],L1,L2),	  %we split input list [X,Y|T] into L1 and L2
+        mergesort(L1,S1),         %we call merge sort recursively on the 
+    							  %2 list L1 and L2 created
+        mergesort(L2,S2),
+        merge(S1,S2,S).			  %we merge all results
+
+%%split predicate : 
+split([],[],[]).
+split([M],[M],[]).
+split([X,Y|T],[X|T1],[Y|T2]):-
+    split(T,T1,T2).
+
+%%merge predicate :
+gt(X,Y):- X &gt; Y.
+
+merge([],L,L).   
+merge(L,[],L).   
+
+merge([H1|T1],[H2|T2],[H1|Res]):- 
+        gt(H2,H1), !,			  
+        merge(T1,[H2|T2],Res).    
+
+merge([H1|T1],[H2|T2],[H2|Res]):- 
+        merge([H1|T1],T2,Res).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Imagine that we are writing game playing software (e.g. for chess). Suppose that we already have a component that can determine all possible moves that we can make for a given board position and what the result will be of each move (how many of our own pieces will be left and how many of the opponent). Suppose this information is represented as a list with elements of the form move(M,N1,N2), where M is a certain move, N1 is the number of pieces left for us and N2 is the number left for our opponent. Our task is now to sort such a list: sort the moves according to descending number of pieces for ourself; if the number of pieces for ourself is equal for some moves, then sort these moves according to ascending number of pieces for the opponent.
+E.g. ?- mergesort([move(h2h4,5,6), move(c2d3,5,5), move(a6f6,6,6)],L).
+results in L = [move(a6f6,6,6),move(c2d3,5,5),move(h2h4,5,6)]
+Try to adapt the mergesort predicate that you have just written in order to do this. Do you need to change the predicate a lot?
+</div>
+
+<div class="nb-cell program" name="p5">
+%basically, the idea is to sort the moves from the best move for us to the
+%worst move for us 
+
+%so, the basic idea of before is the same ! 
+%the only thing that change is the 'greater' predicate
+
+%now, it is defined as : 
+
+greater(move(_,A,_),move(_,B,_)):- 
+    A&gt;B.  %first move is better than second move if the number of pieces left for
+		  %us in the first move (A) is greater than the number of pieces left for
+	      %us in the second move
+greater(move(_,N,A),move(_,N,B)):- 
+    B&gt;A.  %if the number of pieces left for us in the first move (N) is equal to 
+          %the number of pieces left for us in the second move (N), we have to	
+		  %consider the opponent : the first move is better than the second one
+		  %if the number of pieces left in the first move (A) is smaller
+		  %than the number of pieces left in the second move (B)
+</div>
+
+<div class="nb-cell markdown" name="md29">
+## Searching : missionaries/cannibals and water jugs
+</div>
+
+<div class="nb-cell markdown" name="md30">
+For many problems we have a starting situation, a desired end situation, and a set of rules that define which 'actions' we can perform in a given situation (remember the cube problem from session 5). We then have to find the sequence of actions that brings us from the starting situation to the end situation. Prolog makes it easy to write this kind of programs because backtracking (an essential part of searching) is hardwired into prolog. A general scheme for such problems is the following.
+</div>
+
+<div class="nb-cell program" name="p6">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%SEARCHING PROBLEM%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%in a searching problem, we have 
+
+%-a start state
+%-a set of possible actions
+%-a goal state
+
+%we have to find the sequence of actiosn that brings us from the start
+%state to the goal state
+
+%prolog is very well suited due to the fact that backtracking is inherent
+%to prolog
+
+%we can define a pattern for searching : 
+
+
+solve(InitialState,Trace) :-
+        search(InitialState,[InitialState],Trace).
+		%InitialState : input
+		%Trace : solution, i.e. sequence of states visited from initial state
+				 %to goal state
+
+%base case of the accumulator
+% search(CurrentState,AccTrace,Trace):-
+search(CurrentState,Trace,Trace):-
+       is_solution(CurrentState).
+		%CurrentState : current state we are in the search
+		%AccTrace : accumulator that contains all states already visited 
+		%Trace : output argument (we unify Trace wit AccTrace when Current
+		%state is a solution, thanks to the line is_solution(CurrentState))
+
+/*
+search(CurrentState,AccTrace,Trace):-
+        is_solution(CurrentState),
+        Trace=AccTrace.
+*/
+		
+
+%recursive case (where the accumulator is build)
+
+search(CurrentState,AccTrace,Trace):-
+        try_action(CurrentState,NewState), 
+    			%try a new action that brings us from CurrentState to NewState
+        validate_state(NewState),
+    			%test if the state is valid
+        no_loop(NewState,AccTrace),
+    			%test if the state has not been visited before (to avoid loops)
+        search(NewState,[NewState|AccTrace],Trace).
+				%recursive call : we continue the search starting with NewState,
+				%and we add the NewState to the accumulator
+		%--&gt; If NewState is not valid or it is already been visited, we 
+		%    backtrack and try another state
+		%--&gt; The search continue until we have a CurrentState which is a 
+		%    solution : in this case, the base case succeed and the accumulator
+		%    is saved to Trace
+</div>
+
+<div class="nb-cell markdown" name="md31">
+``solve/2`` is a predicate that takes as input the initial state and returns as output a ''trace'' (sequence of states) that is a solution (concretely, Trace is the sequence of states that is visited when going from the initial state to the solution state).
+The search/3 predicate has as first argument the current state, as second argument an accumulator that holds the current trace (in other words, it contains a list with all states that have already been visited during the search process so far), and as third argument the output argument for the accumulator.
+* The idea behind the recursive case of the search/3 predicate is: first try a new action that brings us from the current state to a new state ; then check whether this new state is valid (with validate_state/1) and whether we have not already visited this new state before in the search (with no_loop/2), if this is okay we continue the search starting from this new state (and add the newstate to the accumulated trace), if this is not okay we backtrack to try out another action (we backtrack over try_action to get the next possible NewState).
+* The base case of the search/3 predicate simply states that we can stop searching when the current state is a solution (then we also know that the final trace equals the accumulated trace). Note that the trace will actually be in reverse chronological order since we used an accumulator (so in order to find out how to go from the initial state to the solution, you have to read the trace backwards)!
+</div>
+
+<div class="nb-cell markdown" name="md32">
+### Exercices : Missionaries and cannibals
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Missionaries and cannibals. Suppose 3 missionaries and 3 cannibals are walking together through the forest. They arrive at a river they have to cross, but there is only one boat, and that boat can carry at most 2 people. Of course, for the boat to cross the river, there should be at least one person (missionary or cannibal) in the boat (to row the boat). The problem is that if there are more cannibals than missionaries at any place, they will eat the missionaries.
+Write a program that finds a strategy for the six people to cross the river without a missionary being eaten.
+As usual it is important to think about a good representation for the problem. You can choose the representation for the input and output of the problem yourself, but make sure that, given the output of your program, it is clear how to solve the problem.
+</div>
+
+<div class="nb-cell program" name="p7">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%My idea%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%missionary : m
+%cannibal : c
+%left side,boat, right side : all represented with lists : []
+%for example, if everyone is at the left side : [[c,c,c,w,w,w], [], []]
+
+%start state :  [[c,c,c,w,w,w], [], []]
+%goal state :   [[], [], [c,c,c,w,w,w]]
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%Solution prof%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%We use the following representation for a state: 
+%t(M,C,B) where M (resp C) stands for the number of missionaries 
+%(resp cannibals) on the start-shore and B stands for the shore where 
+%the boat is (-1 for start-shore, 1 for end-shore).
+
+%we just copy paste the pattern
+solve(InitialState,OrderedTrace) :- 
+    reverse(Trace, OrderedTrace),
+    search(InitialState,[InitialState],Trace).
+
+search(CurrentState,Trace,Trace):-
+        is_solution(CurrentState).
+
+search(CurrentState,AccTrace,Trace):-
+        try_action(CurrentState,NewState),
+        validate_state(NewState),
+        no_loop(NewState,AccTrace),
+        search(NewState,[NewState|AccTrace],Trace).
+
+no_loop(NewState,AccTrace) :-
+        not(member(NewState,AccTrace)).
+        % Using negation here is only `safe'
+        % when NewState and AccTrace are already
+        % instantiated when no_loop/2 is called.
+
+%and now, we will define each elem of the pattern 
+
+is_solution(t(0,0,1)).      % desired end state is t(0,0,1).
+try_action(t(M,C,-1),t(NewM,NewC,1)):- 
+	% boat goes from start-shore to end-shore
+    cross_start_to_end(M,C,2,NewM,NewC); % either 2 people cross ...
+	cross_start_to_end(M,C,1,NewM,NewC). % ... or only 1.
+			%these actions results in NewM and NewC
+
+try_action(t(M,C,1),t(NewM,NewC,-1)):- 
+	% boat goes from end-shore to start-shore
+    cross_end_to_start(M,C,2,NewM,NewC); % either 2 people cross ...
+	cross_end_to_start(M,C,1,NewM,NewC). % ... or only 1.
+
+ 
+cross_start_to_end(M,C,0,M,C):- !.  %if '0' people cross, we cut and do not 
+								    %consider the other clauses for 
+									%cross_start_to_end
+
+cross_start_to_end(M,C,N,NewM,NewC):-
+	M2 is M-1,  % let a missionary cross
+	M2&gt;=0,
+	N1 is N-1,
+	cross_start_to_end(M2,C,N1,NewM,NewC).
+
+cross_start_to_end(M,C,N,NewM,NewC):-
+	C2 is C-1,  % let a cannibal cross
+	C2&gt;=0,
+	N1 is N-1,
+	cross_start_to_end(M,C2,N1,NewM,NewC).
+
+cross_end_to_start(M,C,0,M,C):- !.
+
+cross_end_to_start(M,C,N,NewM,NewC):-
+	M2 is M+1,  % let a missionary cross
+	M2=&lt;3,
+	N1 is N-1,
+	cross_end_to_start(M2,C,N1,NewM,NewC).
+
+cross_end_to_start(M,C,N,NewM,NewC):-
+	C2 is C+1,  % let a cannibal cross
+	C2=&lt;3,
+	N1 is N-1,
+	cross_end_to_start(M,C2,N1,NewM,NewC).
+
+validate_state(t(M,C,_)):-
+        OtherM is 3 - M,
+        OtherC is 3 - C,
+        nobody_eaten(M,C),  % start-shore
+        nobody_eaten(OtherM,OtherC). % end-shore
+
+nobody_eaten(0,_). % no missionaries
+nobody_eaten(M,C):-
+        C =&lt; M. % not more cannibals than missionaries.
+
+member(H,[H|_]).
+member(H,[_|T]) :-
+	member(H,T).
+
+reverse([], []).
+reverse(List, Reversed):-
+    reverse_acc(List, [], Reversed).
+
+reverse_acc([], Reversed, Reversed).
+
+reverse_acc([H|T], ReversedAcc, ReversedList):-
+    reverse_acc(T, [H|ReversedAcc], ReversedList).
+    
+% The query ?- solve(t(3,3,-1),Trace). gives the following result:
+% Trace=[t(0, 0, 1), t(1, 1, -1), t(0, 1, 1), t(0, 3, -1), t(0, 2, 1), t(2, 2, -1), t(1, 1, 1), t(3, 1, -1), t(3, 0, 1), t(3, 2, -1), t(2, 2, 1), t(3, 3, -1)]
+% Note that Trace is in reverse chronological order since we used an accumulator.
+</div>
+
+<div class="nb-cell query" name="q6">
+trace, (   solve(t(3,3,-1),Trace)).
+</div>
+
+<div class="nb-cell markdown" name="md6">
+2.) Water jugs. You need to get 8 liter of water from a river. You only have a 15 liter jug and a 16 liter jug. How can you obtain 8 liter using only these two jugs (possible operations are: emptying a jug entirely, filling a jug entirely and emptying one jug in the other)?
+Write a program to solve this problem. Try to write your program such that it finds the shortest solution
+
+We want to solve the problem with the minimal number of steps possible. One way to achieve this is with a search algorithm called 'iterative deepening': we first try to find a solution of depth (= number of steps) 1, if that is not possible of depth 2, 3, ..., until we find a solution.
+</div>
+
+<div class="nb-cell program" name="p15">
+natural(1).
+natural(N) :-
+	natural(N1),
+	N is N1+1.
+
+solve_depthlim(InitialState,DepthLim,Trace) :- 
+        search_depthlim(InitialState,DepthLim,[InitialState],Trace).
+
+search_depthlim(CurrentState,_,Trace,Trace):-
+        is_solution(CurrentState).
+
+search_depthlim(CurrentState,StepsLeft,AccTrace,Trace):-
+	StepsLeft&gt;0,
+        try_action(CurrentState,NewState),
+        % validate_state(NewState), % not needed for the rest of this exercise (only valid states are generated)
+        no_loop(NewState,AccTrace),
+	NewStepsLeft is StepsLeft-1,
+        search_depthlim(NewState,NewStepsLeft,[NewState|AccTrace],Trace).
+
+no_loop(NewState,AccTrace) :-
+        not(member(NewState,AccTrace)).
+
+member(H,[H|_]).
+member(H,[_|T]) :-
+	member(H,T).
+</div>
+
+<div class="nb-cell markdown" name="md33">
+The effect of the line natural(Depth) in the definition of the predicate iterative_deepening/2 is that Depth will be instantiated with a natural number: first 1, if no solution is found with Depth equal to 1 then prolog will backtrack over natural(Depth) and instantiate Depth to 2, and so on. The predicate search_depthlim/4 then performs depth-limited search for increasing values of Depth.
+
+(Note two subtle issues. First: if we apply this strategy on a problem with no solutions, the program will not terminate (it will keep increasing the depth). If we want to avoid this, we could adapt the natural/1 predicate so that it only generates number smaller than a certain number. Second: note that we cannot replace the line natural(Depth) by integer(Depth) (the integer predicate is built-in) since integer(Depth) only succeeds if Depth is already instantiated with an integer but not if it is uninstantiated.)
+
+As a representation of the state we simply use a term of the form J1/J2, where J1 (respectively J2) is the number of liters in jug 1 (respectively jug 2).
+
+Here is the rest of the program.
+</div>
+
+<div class="nb-cell program" name="p16">
+% Some parameter settings:
+required_liters(8).
+max_liters_1(15).
+max_liters_2(16).
+
+% We have a solution when the required number of liters is in Jug1 or in Jug2:
+is_solution(J1/_) :-
+	required_liters(J1).
+is_solution(_/J2) :-
+	required_liters(J2).
+
+% There are only 6 actions possible: completely empty jug 1, completely fill jug 1, empty jug 1 in jug 2 as far as possible, plus the same 3 actions with jug 1 and jug 2 interchanged.
+
+try_action(_/J2,0/J2). % empty jug 1
+
+try_action(J1/_,J1/0). % empty jug 2
+
+try_action(_/J2,M1/J2):-
+        % fill jug 1	
+	max_liters_1(M1).
+
+try_action(J1/_,J1/M2):-
+         % fill jug 2
+	max_liters_2(M2).
+
+try_action(J1/J2,NewJ1/NewJ2):-
+        % empty jug 1 in jug 2 as far as possible
+	max_liters_2(M2),
+        NewJ2 is min(J2 + J1,M2),
+        NewJ1 is max(0,J1-(M2-J2)).
+
+try_action(J1/J2,NewJ1/NewJ2):-
+        % empty jug 2 in jug 1 as far as possible
+	max_liters_1(M1),
+        NewJ1 is min(J1 + J2,M1),
+        NewJ2 is max(0,J2-(M1-J1)).
+</div>
+
+<div class="nb-cell markdown" name="md34">
+The solution looks as follows (we get the solution in reverse order because we used an accumulator; if necessary you can of course reverse this solution):
+
+```
+?- iterative_deepening(0/0,Trace), write(Trace).
+Nb of steps: 28
+[8/16, 15/9, 0/9, 9/0, 9/16, 15/10, 0/10, 10/0, 10/16, 15/11, 0/11, 11/0, 11/16, 15/12, 
+0/12, 12/0, 12/16, 15/13, 0/13, 13/0, 13/16, 15/14, 0/14, 14/0, 14/16, 15/15, 0/15, 15/0]
+
+Trace = [8/16, 15/9, 0/9, 9/0, 9/16, 15/10, 0/10, 10/0, ... /...|...] 
+
+Yes
+```
+</div>
+
+<div class="nb-cell markdown" name="md20">
+# Session 11: Constraint Logic Programming (PC)
+</div>
+
+<div class="nb-cell program" name="p1">
+%classical Prolog : generate then test
+%CLP : 
+%- first introduces the constraints (aka tests)
+%- and then does the generation.
+
+%--&gt; see lectures notebook for examples etc
+</div>
+
+<div class="nb-cell program" name="p2">
+:- use_module(library(clpr)).
+</div>
+
+<div class="nb-cell markdown" name="md1">
+This exercise is about loans. You are given
+* P, the amount of money lent,
+* T, the number of periods in the loan,
+* I, the interest rate on the loan,
+* MP, the amount we pay back each period.
+</div>
+
+<div class="nb-cell markdown" name="md2">
+We define the balance after a number of periods as follows : After 0 periods the balance is simply P. After T periods (T&gt;0) the balance is B1*(1+I)-MP, where B1 stands for the balance after T-1 periods (so this is a recursive definition).
+First, write a predicate to calculate the balance after T periods using pure prolog. Then write this predicate using CLP. Can you calculate the amount of your loan (P) given the other arguments (T,I,MP and the balance B) with these predicates? Are there any arguments you can't calculate with the CLP version?
+</div>
+
+<div class="nb-cell program" name="p3">
+%we want to compute balance B
+%when period T=0, B = P
+%after 'T' periods, balance B = B1*(1+I)-MP
+%						-  I : Interesets
+%						- B1 : balance after T-1 periods 
+%								--&gt; precedent balance
+%								--&gt; we will do a recursive cause : 
+%								--&gt; compute B with the precedent B, i.e. B1
+%						- MP : amout we pay back each period
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%Solution with classical prolog%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%balance(P,T,I,MP,B)
+
+%base case : When T=0, B=P
+balance(P,0,I,MP,P).     %P.S. : we can also write balance(P,0,_,_,P)
+						 %       because we do not care about I and MP
+
+ 
+%recursive case : 
+balance(P,T,I,MP,B) :-
+    T &gt; 0,                  %when period is greater than 0
+    TPrecedent is T-1,      %TPrecedent is the precedent period (just before T)
+    balance(P,TPrecedent,I,MP,PrecedentB),   % PrecedentB : precedent balance
+    B is PrecedentB*(1+I)-MP.  %B (current balance) is computed with PrecedentB
+
+
+
+
+
+%
+</div>
+
+<div class="nb-cell program" name="p4">
+:- use_module(library(clpr)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%Solution with CPLD%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+balance(P,T,_,_,B) :-
+    {
+    T=0,    %if T=0, then B is equal to P (B is constrained to P)
+    B=P
+    }.
+
+
+balance(P,T,I,MP,B) :-
+    { 
+    B = PrecedentB*(1+I)-MP,    %all the conditions becomes constraints
+    TPrecedent = T-1,             %denoted by {}
+    T &gt; 0
+    },
+    balance(P,TPrecedent,I,MP,PrecedentB).   %p.s. : here, we place the 
+    											%recursive call at the end 
+
+
+%%%%%%%%%%%%%%%%%%
+%%%%REMARK%%%%%%%%
+%%%%%%%%%%%%%%%%%%
+
+
+%in CPLD, we use '=' and not 'is' : important to know for the exam !!
+</div>
+
+<div class="nb-cell program" name="p5">
+%comparison of the classical implementation and the CPLD implementation 
+
+%let's try to compute MP given all arguments : 
+%?- balance(100,4,0.1,MP,0).
+
+%---&gt; this works fine with CPLD version 
+%but not with the classical prolog ! 
+
+%cause ? 'B is PrecedentB*(1+I)-MP'
+%      ----&gt; in classical prolog, B is computed only when all variables 
+			%in the right part are instanciated
+
+%In CPLD, we do not give a f*ck ! 'B = PrecedentB*(1+I)-MP' has no 
+%order, the algorithm will take care of computing MP
+
+%more over, the order of the constraints have no importances as well ! 
+
+/*
+
+	{ 
+    B = PrecedentB*(1+I)-MP,   
+    TPrecedent = T-1,             
+    T &gt; 0
+    }
+
+is the same as 
+
+
+	{ 
+    T &gt; 0
+    B = PrecedentB*(1+I)-MP,   
+    TPrecedent = T-1,
+    }
+*/
+</div>
+
+<div class="nb-cell program" name="p6">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%CLPFD%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*
+%CPL for finite domain solver
+:-use_module(library(clpfd)).
+
+
+%the convention for notation is also different !! 
+%every variables gets a number for the integer set
+%arithmetic operations are the same that CPLR : +, -, *, /
+%but for linear relationsship we use  #= #&lt; #=&lt;
+
+%example : 
+%Consider a variable D has domain  { -123, -10..4, 10} 
+%--&gt; D can take value -123, all values between -10 and 4, value 10
+%D in -123 \/ (-10..4) \/ 10    %\/  means OR
+								%(-10..4) for the interval
+
+%we can have a list of finite domain variables
+%here, we specify that all elem in L needs to take a value between 1 and 2
+L = [X,Y,Z], L ins 1..2 .
+
+
+X #= A + B, A in 1..3, B in 3..7.  %X=A+B   ; A = [1...3] ; B = [3...7]
+								   %--&gt; X  = [4...10]
+								   %Lower bound : when A = 1 and B = 3 --&gt; X = 4
+								   %upper bound : when A = 3 and B = 7 --&gt; X = 4
+                                   
+                                   
+[X,Y,Z] ins 1..4,  X #&lt; Y, Y #&lt; Z, label([X,Y,Z]) 
+%label will do the search : we give it the variables that we want to have values
+</div>
+
+<div class="nb-cell markdown" name="md3">
+A criminal wants to break into a safe. He needs to find the combination of the safe: 9 digits in total. He knows that all digits are different, that all digits are in the range 1..9 and that the 1st digit is not 1, the 2nd digit is not 2, and so on ... . Moreover, the absolute difference between the 4th and the 6th digit is equal to the 7th digit. The product of the first three digits is equal to the sum of the last two digits. The sum of the 2nd, 3th and 6th digit is less than the 8th digit, and also the last digit is less than the 8th digit.
+Please help our criminal break the safe (using CLP).
+</div>
+
+<div class="nb-cell program" name="p7">
+%a criminal want to find a code of 9 digits
+%all the digits are different, and between 1..9
+%1st digit is NOT 1, second digit is NOT 2, ...
+%the absolute difference between the 4th and the 6th digit is equal to the 7th
+%product of the 1st,2nd and 3rd is equal to the sum of the last 2 digits
+%the sum of the 2nd, the 3th and the 6th is less than the 8th
+%the last digit is less than the 8th 
+
+:-use_module(library(clpfd)).
+
+breakCode(Code):- 
+     Code = [A,B,C,D,E,F,G,H,I],		%A,B,C ... represent the 9 digits
+     Code ins 1..9,                     %they take value between 1 and 9
+     all_different(Code),			    %they are all different
+     differentFromSelf(Code,1),          %this predicate will encode that the first
+    									%digit cannot be 1, ... (to define later)
+     (D-F #= G)  #\/ (F-D #= G),            %the absolute difference between the 4th and 
+                                        %the 6th digit is equal to the 7th
+     A*B*C #= H+I,                      %product of the 1st,2nd and 3rd is equal to 
+    									%the sum of the last 2 digits
+     B+C+F #&lt; H,						%the sum of the 2nd, the 3th and the 6th is 
+      									%less than the 8th
+     I#&lt;H,                              %the last digit is less than the 8th 
+     labeling([], Code).                 %we do the labeling on Code to 
+    									%instanciation for A,B, ...
+
+
+%let's define different from self   
+differentFromSelf([H|T],N) :-
+    H #\= N,       %H is different from N
+    M = N +1,
+    differentFromSelf(T,M).
+
+	%in the breakcode predicate
+	%we call the function with 'N' = 1 at first
+	%because we want at first that A is different from 1
+	%then we increment N and call it recursively on the 
+	%tail
+	%so, for the 2nd recursion, the code will be 
+	%executed on B with N = 2 !
+    
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%%%%%%%%Remark%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+%do not forget to use '#' for :   
+%#= #&lt; #=&lt;, #&lt;, #&gt;, #\/, #/\, #\=
+%no need of # for : +, -, *, /   ---&gt;     addition, soustraction, 
+%										  multiplication,division   !!!!
+</div>
+
+<div class="nb-cell markdown" name="md4">
+In a game, exactly six inverted cups stand side by side in a straight line, and each has exactly one ball under it. The cups are numbered consecutively from 1 through 6. Each of the balls has a different color: green, magenta, orange, purple, red, and yellow. Suppose you know that:
+
+The magenta ball is under cup 1.
+The green ball is under cup 5.
+The purple ball is under a lower-numbered cup than the orange ball.
+The red ball is under a cup immediately adjacent to the cup under which the magenta ball is hidden.
+Write a CLP-program to find out which ball is under which cup. Are there multiple possibilities?
+</div>
+
+<div class="nb-cell program" name="p8">
+:-use_module(library(clpfd)).
+
+findCup(Balls):-
+    Balls = [G,M,O,P,R,Y],   %here in the list, we will define all the balls (not the
+    					     %cup) to be able then to say easily with #= that G is
+    					     %in cup 3 with G #=3 for example
+    all_different(Balls),    %all Balls are in a different cup
+    M #= 1,
+    G #= 5,
+    P #&lt; O,
+    (R #= M + 1) #\/ (R #= M - 1),
+    labelling([],Balls).
+    
+
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%REMARK%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+
+%instead of 
+(R #= M + 1) #\/ (R #= M - 1),
+%we can use reification ! it is more efficient in time in CPLFD
+%see examples in lectures notebook 
+
+B1 #&lt;==&gt; R #= M + 1     %we define B1 as being equivalent (#&lt;==&gt;) R #= M + 1 
+B2 #&lt;==&gt; (R #= M - 1)   %we define B2 as being equivalent (#&lt;==&gt;) R #= M - 1 
+
+B1 + B2 #&gt;= 1 , %we constraint that their sum is greater than 1 (logical OR)
+label([B1,B2]). %we force a value for B1 and B2 with label
+</div>
+
+<div class="nb-cell markdown" name="md5">
+You are organizing a large party. There will be N tables in the room, with M chairs around each table. Guests are assigned numbers from 1 to MN. You need to assign each guest a table so that two conditions are satisfied.
+Some guests like each other and want to sit together: you are given a set Likes of pairs of guests and for every pair (i,j) in Likes, guests i and j should be assigned the same table.
+Some guests dislike each other and want to sit at different tables: you are given a set DisLikes of pairs of guests and for every pair (i,j) in DisLikes, guests i and j should be assigned different tables.
+Write a CLP-program that finds such a seating arrangement (if there exists one).
+Note that the predicate exactly/3 is often very handy when solving CLP-problems. This predicate was discussed in the lectures (it was called occurs_n), it checks (using CLP) whether an integer occurs in a list of integers exactly N times.
+
+exactly(_El, [], 0).
+exactly(El, [H|List], N) :-
+    El #= H #&lt;==&gt; B,
+    N #= M+B,
+    exactly(El, List, M).
+</div>
+
+<div class="nb-cell program" name="p9">
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%REMARK%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%pas fait, à faire après si y a le temps
+</div>
+
+<div class="nb-cell markdown" name="md21">
+# Session 12: Difference lists, grammars and mixed exercises
+</div>
+
+<div class="nb-cell program" name="p1">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%Difference lists%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</div>
+
+<div class="nb-cell markdown" name="md1">
+Consider a predicate flatten(List,FlatList) where List can contain lists, and lists of lists, and so on, and FlatList is a list containing all the atomic members, except the empty list, of those lists.
+* E.g. ?- flatten([[1,2,3],[4,5,[6,7],8],[9]],FlatList). gives FlatList=[1,2,3,4,5,6,7,8,9].
+</div>
+
+<div class="nb-cell markdown" name="md2">
+The 'normal' version of this predicate looks as follows:
+
+
+flatten([], []).
+
+flatten(X, [X]) :- atomic(X), X  \== [].
+    
+flatten([H|T], L3) :-flatten(H, L1), flatten(T, L2), append(L1, L2, L3).
+
+This version is inefficient because of the many calls to append! Give a more efficient version with difference lists.
+</div>
+
+<div class="nb-cell program" name="p2">
+%so, the normal version is : 
+
+flatten([], []).
+
+flatten(X, [X]) :- 
+    atomic(X),     %if the input is simply an atomic X, we create a list [X]
+    X  \== [].
+    
+flatten([H|T], L3) :-   %if the input is a list [H|T]
+    flatten(H, L1), 	%we call recursively flatten on the head
+    flatten(T, L2),     %and the tail
+    append(L1, L2, L3). %and we append the result
+</div>
+
+<div class="nb-cell program" name="p3">
+%%%%%%%Version with difference list%%%%%
+flatten(List,FlatList) :- 
+    flatten_diff(List,FlatList-[]).
+
+flatten_diff([],L-L).
+
+flatten_diff(X,[X|L]-L) :- 
+    atomic(X),
+    X \==[].
+
+flatten_diff([X|T],A-C) :- 
+	flatten_diff(X,A-B), flatten_diff(T,B-C).
+
+
+%en soit, c'est pas super différent, on introduit juste la notation
+%de difference list
+</div>
+
+<div class="nb-cell markdown" name="md3">
+In session 9 we discussed trees. Remember that a tree with root X, left-subtree L and right-subtree R was represented as a term t(L,X,R) (e.g. the term t(t(nil,a,nil),b,t(nil,c,nil)) represents a tree with elements a, b and c). In session 9 we also discussed a predicate to 'linearize' a tree, i.e. to collect all elements of a tree in a list (in the right order). We defined this predicate as follows:
+lin(nil,[]).
+lin(t(Left,Root,Right),Res):-
+	lin(Left,L),
+	lin(Right,R),
+	conc(L,[Root|R],Res).
+Now try to do this using difference lists.
+</div>
+
+<div class="nb-cell program" name="p4">
+%the code with classical list was : 
+
+lin(nil,[]).
+lin(t(Left,Root,Right),Res):-
+	lin(Left,L),
+	lin(Right,R),
+	conc(L,[Root|R],Res).
+</div>
+
+<div class="nb-cell program" name="p5">
+%Now try to do this using difference lists.
+
+lin2(T,L) :- lin_diff(T,L-[]).
+
+lin_diff(nil,Res-Res).   %Res-Res represent the empty different list ! 
+lin_diff(t(Left,Root,Right),Res-T):-
+	lin_diff(Left,L-T1),
+	lin_diff(Right,R-T2),
+	T1 = [Root|C].
+</div>
+
+<div class="nb-cell program" name="p6">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%DEFINITE CLAUSE GRAMMARS%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%see lecture notebooks for the theory
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Given a integer number written in words (represented as a list, e.g. [two,hundred,thirty,seven]), we want to find the corresponding number (e.g 237). We can solve this using a DCG.
+* First write grammar rules that, given an integer number between 0 and 20, generate that number in words.
+* Now write grammar rules that, given an integer number between 0 and 99, generate that number in words (of course you have solved part of the problem already in the previous step).
+* Now extend your DCG such that it can deal with integers between 0 and 999.
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Given [two,hundred,thirty,seven], which query do you need to ask to get the number 237?
+Can you also use your DCG in the other direction: given 237, can you translate it to [two,hundred,thirty,seven]?
+</div>
+
+<div class="nb-cell program" name="p7">
+/*Roughly speaking, a grammar takes some input (in this case a natural number) 
+and 'produces' or `generates' a string (in this case the string is the 
+representation in words of the number that was given as input). 
+Our grammar, like any grammar, can be used in two directions.
+
+*  In the queries given above, we always gave the string as input and ask 
+   for the number. Since our grammar tells us how to generate a string given 
+   a number, we are in a sense using our grammar 'backwards'. 
+   This way of using a grammer is called parsing.
+
+*  Of course we can use the grammar also in the other ('forward') direction, 
+   namely for generating: given a number, return the string.
+</div>
+
+<div class="nb-cell program" name="p8">
+%we define a predicate n_1_9n for 'numbers between 1 and 9'
+%we use an argument (1), (2), ... to be able to take into account the 
+%number
+
+
+n_1_9(1) --&gt; [one].
+n_1_9(2) --&gt; [two].
+n_1_9(3) --&gt; [three].
+n_1_9(4) --&gt; [four].
+n_1_9(5) --&gt; [five].
+n_1_9(6) --&gt; [six].
+n_1_9(7) --&gt; [seven].
+n_1_9(8) --&gt; [eight].
+n_1_9(9) --&gt; [nine].
+
+n_0_9(0) --&gt; [].
+n_0_9(N) --&gt; n_1_9(N).
+
+n_10_19(10) --&gt; [ten].
+n_10_19(11) --&gt; [eleven].
+n_10_19(12) --&gt; [twelve].
+n_10_19(13) --&gt; [thirteen].
+n_10_19(14) --&gt; [fourteen].
+n_10_19(15) --&gt; [fifteen].
+n_10_19(16) --&gt; [sixteen].
+n_10_19(17) --&gt; [seventeen].
+n_10_19(18) --&gt; [eighteen].
+n_10_19(19) --&gt; [nineteen].
+
+n_20_90(20) --&gt; [twenty].
+n_20_90(30) --&gt; [thirty].
+n_20_90(40) --&gt; [fourty].
+n_20_90(50) --&gt; [fifty].
+n_20_90(60) --&gt; [sixty].
+n_20_90(70) --&gt; [seventy].
+n_20_90(80) --&gt; [eighty].
+n_20_90(90) --&gt; [ninety].
+
+n_0_99(N) --&gt; n_0_9(N).
+n_0_99(N) --&gt; n_10_19(N).
+n_0_99(N) --&gt; n_20_90(N).
+n_0_99(N) --&gt; n_20_90(N1), n_1_9(N2), {N is N1+N2}.
+
+numerical(N) --&gt; n_0_99(N).
+numerical(N) --&gt; n_1_9(N1), [hundred], n_0_99(N2), {N is 100*N1+N2}.
+
+	%for the number N, i.e. a number between 0 and 99 it expression in word 
+	%is defined by : 
+%       - n_1_9(N1), so 'one', 'two', ...
+%       - the word 'hundred'
+%		- n_0_99(N2), i.e. what we defined earlier for numbers between 0 and 99
+%  %note that N is defined as the sum of 100*N1 and N2
+</div>
+
+<div class="nb-cell program" name="p9">
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%The Knight's tour : Search problem%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</div>
+
+<div class="nb-cell markdown" name="md6">
+The Knight's Tour is a chess-related problem that was proposed by Euler. The problem is: how can a knight move around an empty chessboard and visit each of the squares exactly once? We will assume that the knight starts at the top-left corner.
+Take into account that a knight can only make L-shaped moves: one move consists of going one square horizontally and two squares vertically, or vice versa. For instance, for an 8x8 board and from a position K near the middle of the board, the knight can go to eight different new positions: 0 to 7 in the following figure.
+</div>
+
+<div class="nb-cell markdown" name="md7">
+in french, the knight is the 'Cavalier' in chess
+
+* Write a Prolog program to solve this problem, that is, to find a valid knight's tour.
+</div>
+
+<div class="nb-cell program" name="p10">
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%REmark%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%à revoir si il le faut, je l'ai backlé
+
+
+
+
+
+%this is a search problem
+%so, we will use our pattern for that
+
+%first, we need to define our representatio of the problem
+%we will use a square on the board as a state, and it will
+%be represented by its coordinate (X,Y)
+%we start counting from upper left, so upper left is (1,1)
+
+
+
+size(8).  %size of the board 
+
+solve(InitialState,Trace) :- 
+        search(InitialState,[InitialState],Trace).
+
+search(_State,Trace,Trace):-
+        is_solution(Trace).
+
+search(State,AccTrace,Trace):-
+        try_action(State,NewState),
+        validate_state(NewState),       
+        no_loop(NewState,AccTrace),
+        search(NewState,[NewState|AccTrace],Trace).
+
+no_loop(State,Trace) :-
+        not(member(State,Trace)).
+        % Using negation here is only `safe'
+        % when NewState and AccTrace are already
+        % instantiated when no_loop/2 is called.
+
+member(H,[H|_]).
+member(H,[_|T]) :-
+	member(H,T).
+
+
+%now, we defind all the predicates of the pattern
+
+is_solution(Trace) :-
+	size(Size),
+	SizeSquare is Size*Size,
+	length(Trace,SizeSquare),
+	no_loops(Trace).
+	
+no_loops([]).
+no_loops([H|T]) :- 
+	no_loop(H,T),
+	no_loops(T).
+
+try_action((X,Y),(NewX,NewY)) :-
+	sign(SignX), NewX is X+SignX*2,
+	sign(SignY), NewY is Y+SignY*1.
+try_action((X,Y),(NewX,NewY)) :-
+	sign(SignX), NewX is X+SignX*1,
+	sign(SignY), NewY is Y+SignY*2.
+
+sign(-1).
+sign(1).
+
+validate_state((X,Y)) :-
+	size(Size),
+    X&gt;=1, 
+	X=&lt;Size, 
+	Y&gt;=1, 
+	Y=&lt;Size.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Extra exercise. For an 8x8 board, the most naive generate-and-test program is already too slow in practice. One problem with such a naive program is that when deciding which new position NewPos to go to from the current position, we try out the different possible values for NewPos in an arbitrary order. There is a smart way to make the generate-and-test program more efficient. The idea is to not try out new positions in an arbitrary order, but to use a particular heuristic for deciding which new position NewPos to try out first. A heuristic that is known to work well for the knights tour is the following: calculate for each possible new position NewPos the number of positions that NewPos can reach and that have not been visited yet, we call this number the "heuristic value" of NewPos; then always try out the new position with the smallest heuristic value first. (It is known that this particular heuristic works well for the knights tour. Don't worry: you do not need to understand why this works, and you definitely do not need to be able to invent heuristics like this yourself!)
+
+Try to adapt the naive generate-and-test program to take into account this heuristic.
+* Define a predicate compute_heuristic that calculates the heuristic value of a given possible new position NewPos.
+* Adapt the generate-and-test program such that it makes use of this predicate.
+</div>
+
+</div>
