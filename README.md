@@ -15,3 +15,8 @@ Among others, some key concepts I have explored here are:
 - Heuristic functions
 - List manipulation
 - Reification (conversion of value tests into booleans)
+
+Credits:
+- All exercices are from the KUL
+- some solutions are directly taken from the professors answers
+- This was done in collaboration with a friend of mine whose name I will not disclose. 
