@@ -1,4 +1,4 @@
-# Prolog_KUL
+# Prolog
 This repo groups together a series of programs I started developing during the Programming Languages and Methodologies course, taken as part of my Advanced Master's in AI at KU Leuven. This groups exercices in a SWish prolog notebook and prolog programs as part of exam preparations.
 
 Among others, some key concepts I have explored here are:
