@@ -3299,8 +3299,32 @@ Yes
 %--&gt; see lectures notebook for examples etc
 </div>
 
+<div class="nb-cell markdown" name="md36">
+## Constraint Logic Programming with Reals
+</div>
+
 <div class="nb-cell program" name="p2">
 :- use_module(library(clpr)).
+</div>
+
+<div class="nb-cell query" name="q7">
+3*X-2*Y=6,2*Y=X.
+</div>
+
+<div class="nb-cell query" name="q8">
+3*X-2*Y=6.
+</div>
+
+<div class="nb-cell query" name="q9">
+{3*X-2*Y=6,2*Y=X}.
+</div>
+
+<div class="nb-cell query" name="q10">
+{Z=&lt;X-2,Z=&lt;6-X,Z+1=2}.
+</div>
+
+<div class="nb-cell query" name="q11">
+{Z=&lt;X-2,Z=&lt;6-X,Z+1=2},minimize(X).
 </div>
 
 <div class="nb-cell markdown" name="md1">
@@ -3316,7 +3340,7 @@ We define the balance after a number of periods as follows : After 0 periods the
 First, write a predicate to calculate the balance after T periods using pure prolog. Then write this predicate using CLP. Can you calculate the amount of your loan (P) given the other arguments (T,I,MP and the balance B) with these predicates? Are there any arguments you can't calculate with the CLP version?
 </div>
 
-<div class="nb-cell program" name="p3">
+<div class="nb-cell program" data-background="true" name="p3">
 %we want to compute balance B
 %when period T=0, B = P
 %after 'T' periods, balance B = B1*(1+I)-MP
@@ -3336,7 +3360,7 @@ First, write a predicate to calculate the balance after T periods using pure pro
 %balance(P,T,I,MP,B)
 
 %base case : When T=0, B=P
-balance(P,0,I,MP,P).     %P.S. : we can also write balance(P,0,_,_,P)
+balance(P,0,_I,_MP,P).     %P.S. : we can also write balance(P,0,_,_,P)
 						 %       because we do not care about I and MP
 
  
@@ -3354,27 +3378,28 @@ balance(P,T,I,MP,B) :-
 %
 </div>
 
-<div class="nb-cell program" name="p4">
+<div class="nb-cell program" data-background="true" name="p4">
 :- use_module(library(clpr)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%Solution with CPLD%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%Solution with CPLR%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-balance(P,T,_,_,B) :-
+balance_clp(P,T,_,_,B) :-
     {
     T=0,    %if T=0, then B is equal to P (B is constrained to P)
     B=P
     }.
 
 
-balance(P,T,I,MP,B) :-
+balance_clp(P,T,I,MP,B) :-
     { 
-    B = PrecedentB*(1+I)-MP,    %all the conditions becomes constraints
-    TPrecedent = T-1,             %denoted by {}
-    T &gt; 0
+    T &gt; 0,
+    TPrecedent = T-1,          
+    B = PrecedentB*(1+I)-MP    %all the conditions becomes constraints
+    						   %denoted by {}
     },
-    balance(P,TPrecedent,I,MP,PrecedentB).   %p.s. : here, we place the 
+    balance_clp(P,TPrecedent,I,MP,PrecedentB).   %p.s. : here, we place the 
     											%recursive call at the end 
 
 
@@ -3383,7 +3408,23 @@ balance(P,T,I,MP,B) :-
 %%%%%%%%%%%%%%%%%%
 
 
-%in CPLD, we use '=' and not 'is' : important to know for the exam !!
+%in CPLR, we use '=' and not 'is' : important to know for the exam !!
+</div>
+
+<div class="nb-cell query" name="q13">
+balance_clp(100,4,0.1,20,B).
+</div>
+
+<div class="nb-cell query" name="q14">
+balance(100,4,0.1,20,B).
+</div>
+
+<div class="nb-cell query" name="q15">
+balance_clp(100,4,0.1,MP,0).
+</div>
+
+<div class="nb-cell query" name="q16">
+balance(100,4,0.1,MP,0).
 </div>
 
 <div class="nb-cell program" name="p5">
@@ -3399,7 +3440,7 @@ balance(P,T,I,MP,B) :-
 %      ----&gt; in classical prolog, B is computed only when all variables 
 			%in the right part are instanciated
 
-%In CPLD, we do not give a f*ck ! 'B = PrecedentB*(1+I)-MP' has no 
+%In CPLR, we do not give a f*ck ! 'B = PrecedentB*(1+I)-MP' has no 
 %order, the algorithm will take care of computing MP
 
 %more over, the order of the constraints have no importances as well ! 
@@ -3421,6 +3462,14 @@ is the same as
     TPrecedent = T-1,
     }
 */
+</div>
+
+<div class="nb-cell markdown" name="md35">
+## Finite Domain Constraint Logic Programming
+</div>
+
+<div class="nb-cell markdown" name="md37">
+Often the variables don't range over all real numbers, but over a finite set of elements. SICStus supports finite sets of integers as finite domains. With in/2 or domain/3 we can specify this domain, we can impose constraints with #&gt;/2 #=/2 etc. More constraint expressing predicates can be found in Bratko, p.341-345. To use CLP on a finite domain, first load the necessary libraries (warning: these may interfere with the other clp-libraries, so first restart your prolog engine to avoid problems):
 </div>
 
 <div class="nb-cell program" name="p6">
@@ -3459,7 +3508,7 @@ X #= A + B, A in 1..3, B in 3..7.  %X=A+B   ; A = [1...3] ; B = [3...7]
 </div>
 
 <div class="nb-cell markdown" name="md3">
-A criminal wants to break into a safe. He needs to find the combination of the safe: 9 digits in total. He knows that all digits are different, that all digits are in the range 1..9 and that the 1st digit is not 1, the 2nd digit is not 2, and so on ... . Moreover, the absolute difference between the 4th and the 6th digit is equal to the 7th digit. The product of the first three digits is equal to the sum of the last two digits. The sum of the 2nd, 3th and 6th digit is less than the 8th digit, and also the last digit is less than the 8th digit.
+1.) A criminal wants to break into a safe. He needs to find the combination of the safe: 9 digits in total. He knows that all digits are different, that all digits are in the range 1..9 and that the 1st digit is not 1, the 2nd digit is not 2, and so on ... . Moreover, the absolute difference between the 4th and the 6th digit is equal to the 7th digit. The product of the first three digits is equal to the sum of the last two digits. The sum of the 2nd, 3th and 6th digit is less than the 8th digit, and also the last digit is less than the 8th digit.
 Please help our criminal break the safe (using CLP).
 </div>
 
@@ -3475,20 +3524,23 @@ Please help our criminal break the safe (using CLP).
 :-use_module(library(clpfd)).
 
 breakCode(Code):- 
-     Code = [A,B,C,D,E,F,G,H,I],		%A,B,C ... represent the 9 digits
-     Code ins 1..9,                     %they take value between 1 and 9
-     all_different(Code),			    %they are all different
-     differentFromSelf(Code,1),          %this predicate will encode that the first
+    % specify the variables 
+    Code = [A,B,C,D,E,F,G,H,I],		%A,B,C ... represent the 9 digits
+    % specify the domains
+    Code ins 1..9,                     %they take value between 1 and 9
+    % specify general constraints
+    all_different(Code),			    %they are all different
+    differentFromSelf(Code,1),          %this predicate will encode that the first
     									%digit cannot be 1, ... (to define later)
-     (D-F #= G)  #\/ (F-D #= G),            %the absolute difference between the 4th and 
-                                        %the 6th digit is equal to the 7th
-     A*B*C #= H+I,                      %product of the 1st,2nd and 3rd is equal to 
+    (D-F #= G)  #\/ (F-D #= G),         %the absolute difference between the 4th and 
+    									%the 6th digit is equal to the 7th
+    A*B*C #= H+I,                      	%product of the 1st,2nd and 3rd is equal to 
     									%the sum of the last 2 digits
-     B+C+F #&lt; H,						%the sum of the 2nd, the 3th and the 6th is 
-      									%less than the 8th
-     I#&lt;H,                              %the last digit is less than the 8th 
-     labeling([], Code).                 %we do the labeling on Code to 
-    									%instanciation for A,B, ...
+    B+C+F #&lt; H,							%the sum of the 2nd, the 3th and the 6th is 
+    									%less than the 8th
+    I#&lt;H,                               %the last digit is less than the 8th 
+    labeling([], Code).                 %we do the labeling on Code to 
+    									%instanciate A,B, ...
 
 
 %let's define different from self   
@@ -3497,12 +3549,9 @@ differentFromSelf([H|T],N) :-
     M = N +1,
     differentFromSelf(T,M).
 
-	%in the breakcode predicate
-	%we call the function with 'N' = 1 at first
-	%because we want at first that A is different from 1
-	%then we increment N and call it recursively on the 
-	%tail
-	%so, for the 2nd recursion, the code will be 
+	%in the breakcode predicate we first call the function with 'N' = 1
+	%because we want A to be different from 1 then we increment N 
+	%and call it recursively on the tail so, for the 2nd recursion, the code will be 
 	%executed on B with N = 2 !
     
     
@@ -3517,12 +3566,13 @@ differentFromSelf([H|T],N) :-
 </div>
 
 <div class="nb-cell markdown" name="md4">
-In a game, exactly six inverted cups stand side by side in a straight line, and each has exactly one ball under it. The cups are numbered consecutively from 1 through 6. Each of the balls has a different color: green, magenta, orange, purple, red, and yellow. Suppose you know that:
+2.) In a game, exactly six inverted cups stand side by side in a straight line, and each has exactly one ball under it. The cups are numbered consecutively from 1 through 6. Each of the balls has a different color: green, magenta, orange, purple, red, and yellow. Suppose you know that:
 
-The magenta ball is under cup 1.
-The green ball is under cup 5.
-The purple ball is under a lower-numbered cup than the orange ball.
-The red ball is under a cup immediately adjacent to the cup under which the magenta ball is hidden.
+* The magenta ball is under cup 1.
+* The green ball is under cup 5.
+* The purple ball is under a lower-numbered cup than the orange ball.
+* The red ball is under a cup immediately adjacent to the cup under which the magenta ball is hidden.
+
 Write a CLP-program to find out which ball is under which cup. Are there multiple possibilities?
 </div>
 
@@ -3538,7 +3588,7 @@ findCup(Balls):-
     G #= 5,
     P #&lt; O,
     (R #= M + 1) #\/ (R #= M - 1),
-    labelling([],Balls).
+    labeling([],Balls).
     
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -3550,19 +3600,93 @@ findCup(Balls):-
 %we can use reification ! it is more efficient in time in CPLFD
 %see examples in lectures notebook 
 
-B1 #&lt;==&gt; R #= M + 1     %we define B1 as being equivalent (#&lt;==&gt;) R #= M + 1 
-B2 #&lt;==&gt; (R #= M - 1)   %we define B2 as being equivalent (#&lt;==&gt;) R #= M - 1 
+B1 #&lt;==&gt; R #= M + 1,     %we define B1 as being equivalent (#&lt;==&gt;) R #= M + 1 
+B2 #&lt;==&gt; (R #= M - 1),   %we define B2 as being equivalent (#&lt;==&gt;) R #= M - 1 
 
-B1 + B2 #&gt;= 1 , %we constraint that their sum is greater than 1 (logical OR)
+B1 + B2 #&gt;= 1, %we constraint that their sum is greater than 1 (logical OR)
 label([B1,B2]). %we force a value for B1 and B2 with label
 </div>
 
 <div class="nb-cell markdown" name="md5">
-You are organizing a large party. There will be N tables in the room, with M chairs around each table. Guests are assigned numbers from 1 to MN. You need to assign each guest a table so that two conditions are satisfied.
-Some guests like each other and want to sit together: you are given a set Likes of pairs of guests and for every pair (i,j) in Likes, guests i and j should be assigned the same table.
-Some guests dislike each other and want to sit at different tables: you are given a set DisLikes of pairs of guests and for every pair (i,j) in DisLikes, guests i and j should be assigned different tables.
+3.) You are organizing a large party. There will be N tables in the room, with M chairs around each table. Guests are assigned numbers from 1 to MN. You need to assign each guest a table so that two conditions are satisfied.
+
+  1. Some guests like each other and want to sit together: you are given a set Likes of pairs of guests and for every pair (i,j) in Likes, guests i and j should be assigned the same table.
+  2. Some guests dislike each other and want to sit at different tables: you are given a set DisLikes of pairs of guests and for every pair (i,j) in DisLikes, guests i and j should be assigned different tables.
+
 Write a CLP-program that finds such a seating arrangement (if there exists one).
+
 Note that the predicate exactly/3 is often very handy when solving CLP-problems. This predicate was discussed in the lectures (it was called occurs_n), it checks (using CLP) whether an integer occurs in a list of integers exactly N times.
+
+```
+exactly(_El, [], 0).
+exactly(El, [H|List], N) :-
+    El #= H #&lt;==&gt; B,
+    N #= M+B,
+    exactly(El, List, M).
+```
+
+Example
+- N (tables) : 3
+- M (chairs per table) : 2
+- Likes : [(1,3),(2,5)]
+- Dislikes : [(4,2),(3,5)]
+</div>
+
+<div class="nb-cell program" name="p18">
+
+</div>
+
+<div class="nb-cell markdown" name="md38">
+#### Solution
+We used a predicate party(M,N,Likes,DisLikes), which has four input parameters: the number of chairs at a table (M), the number of tables (N), a list Likes with information about who likes who and a list DisLikes with information about who dislikes who. For instance if we know that the first and second guest like each other and that the third and fourth guest like each other, the list Likes is [(1,2),(3,4)]. The predicate writes out a list that shows for each guest at which table (s)he is sitting (e.g. the first element of this list is the table number for the first person, ...).
+
+</div>
+
+<div class="nb-cell program" data-background="true" name="p9">
+:-use_module(library(clpfd)).
+
+party(M,N,Likes,DisLikes) :-
+    NumGuests is N*M,
+    length(Guests,NumGuests),  % creates a table Guest of length NumGuest (N*M)
+    Guests ins 1..N,        % domain from 1..N -&gt; we don't care about which chair
+    add_likes_constraints(Likes,Guests),
+    add_dislikes_constraints(DisLikes,Guests),
+    add_table_constraints(N,Guests,M),
+    labeling([],Guests),
+    write(Guests).
+
+% check all likes constraints
+add_likes_constraints([],_).
+add_likes_constraints([(X,Y)|Likes],Guests) :-
+        nth_element(X,Guests,GuestX),
+        nth_element(Y,Guests,GuestY),
+        GuestX #= GuestY,   % GuestX and GuestY should be at the same table 
+        add_likes_constraints(Likes,Guests).
+
+% check all dislikes constraints
+add_dislikes_constraints([],_).
+add_dislikes_constraints([(X,Y)|DisLikes],Guests) :-
+        nth_element(X,Guests,GuestX),     	% gets the value at position X in Guest 
+											% (Guest[X-1])
+        nth_element(Y,Guests,GuestY),
+        GuestX #\= GuestY,   % GuestX and GuestY should be at the same table 
+        add_dislikes_constraints(DisLikes,Guests).
+
+% check for each table that there's exactly M people at the table
+add_table_constraints(0,_,_).
+% recursive clause, As we are 
+add_table_constraints(Table,Guests,M) :-
+    Table&gt;0,
+    % finds how many times the table number occurs in Guest
+    exactly(Table,Guests,M), % of all guests, exactly M sit at table Table
+    PrevTable is Table-1,
+    add_table_constraints(PrevTable,Guests,M).
+
+% nth_element(N,List,El): El is the Nth element in List
+nth_element(1,[El|_],El).
+nth_element(N,[_|T],El) :-
+	N1 is N-1,
+	nth_element(N1,T,El).
 
 exactly(_El, [], 0).
 exactly(El, [H|List], N) :-
@@ -3571,26 +3695,17 @@ exactly(El, [H|List], N) :-
     exactly(El, List, M).
 </div>
 
-<div class="nb-cell program" name="p9">
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%REMARK%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%pas fait, à faire après si y a le temps
+<div class="nb-cell query" name="q12">
+trace, (   party(3,2,[(1,3),(2,5)],[(4,2),(3,5)])).
 </div>
 
 <div class="nb-cell markdown" name="md21">
 # Session 12: Difference lists, grammars and mixed exercises
 </div>
 
-<div class="nb-cell program" name="p1">
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%Difference lists%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-</div>
-
 <div class="nb-cell markdown" name="md1">
-Consider a predicate flatten(List,FlatList) where List can contain lists, and lists of lists, and so on, and FlatList is a list containing all the atomic members, except the empty list, of those lists.
+## Difference lists
+1.) Consider a predicate flatten(List,FlatList) where List can contain lists, and lists of lists, and so on, and FlatList is a list containing all the atomic members, except the empty list, of those lists.
 * E.g. ?- flatten([[1,2,3],[4,5,[6,7],8],[9]],FlatList). gives FlatList=[1,2,3,4,5,6,7,8,9].
 </div>
 
@@ -3642,12 +3757,14 @@ flatten_diff([X|T],A-C) :-
 </div>
 
 <div class="nb-cell markdown" name="md3">
-In session 9 we discussed trees. Remember that a tree with root X, left-subtree L and right-subtree R was represented as a term t(L,X,R) (e.g. the term t(t(nil,a,nil),b,t(nil,c,nil)) represents a tree with elements a, b and c). In session 9 we also discussed a predicate to 'linearize' a tree, i.e. to collect all elements of a tree in a list (in the right order). We defined this predicate as follows:
+2.) In session 9 we discussed trees. Remember that a tree with root X, left-subtree L and right-subtree R was represented as a term t(L,X,R) (e.g. the term t(t(nil,a,nil),b,t(nil,c,nil)) represents a tree with elements a, b and c). In session 9 we also discussed a predicate to 'linearize' a tree, i.e. to collect all elements of a tree in a list (in the right order). We defined this predicate as follows:
+```
 lin(nil,[]).
 lin(t(Left,Root,Right),Res):-
 	lin(Left,L),
 	lin(Right,R),
 	conc(L,[Root|R],Res).
+```
 Now try to do this using difference lists.
 </div>
 
@@ -3661,23 +3778,27 @@ lin(t(Left,Root,Right),Res):-
 	conc(L,[Root|R],Res).
 </div>
 
-<div class="nb-cell program" name="p5">
-%Now try to do this using difference lists.
+<div class="nb-cell program" data-background="true" name="p17">
+lin2(Tree, List):-
+    lin_diff(Tree, List-[]).
 
-lin2(T,L) :- lin_diff(T,L-[]).
+lin_diff(nil, Res-Res). %Res-Res represent the empty different list !
+lin_diff(t(Left, Root, Right), L-T2):-
+    lin_diff(Left, L-T1),
+    lin_diff(Right, R-T2),
+    T1 = [Root|R].
+    
+</div>
 
-lin_diff(nil,Res-Res).   %Res-Res represent the empty different list ! 
-lin_diff(t(Left,Root,Right),Res-T):-
-	lin_diff(Left,L-T1),
-	lin_diff(Right,R-T2),
-	T1 = [Root|C].
+<div class="nb-cell query" name="q17">
+lin2(t(t(nil,a,nil),b,t(nil,c,nil)), List)
+</div>
+
+<div class="nb-cell markdown" name="md39">
+## Definite Clause Grammars (DCG's)
 </div>
 
 <div class="nb-cell program" name="p6">
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%DEFINITE CLAUSE GRAMMARS%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %see lecture notebooks for the theory
 </div>
 
@@ -3763,15 +3884,51 @@ numerical(N) --&gt; n_1_9(N1), [hundred], n_0_99(N2), {N is 100*N1+N2}.
 %  %note that N is defined as the sum of 100*N1 and N2
 </div>
 
-<div class="nb-cell program" name="p9">
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%The Knight's tour : Search problem%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<div class="nb-cell markdown" name="md41">
+#### Some queries
+</div>
+
+<div class="nb-cell query" name="q18">
+trace, (   numerical(N,[fourteen],[])).
+</div>
+
+<div class="nb-cell query" name="q19">
+numerical(N,[seventy,six],[]).
+</div>
+
+<div class="nb-cell query" name="q20">
+numerical(N,[two,hundred,thirty,seven],[]).
+</div>
+
+<div class="nb-cell markdown" name="md42">
+Remember that the two last arguments of the numerical/3 predicate together form a difference list. This explains the following query:
+```
+?- numerical(N,[two,hundred,thirty,seven,something,else],[something,else]).
+N = 237 ?
+```
+
+Roughly speaking, a grammar takes some input (in this case a natural number) and 'produces' or 'generates' a string (in this case the string is the representation in words of the number that was given as input). Our grammar, like any grammar, can be used in two directions.
+
+In the queries given above, we always gave the string as input and ask for the number. Since our grammar tells us how to generate a string given a number, we are in a sense using our grammar 'backwards'. This way of using a grammer is called parsing.
+Of course we can use the grammar also in the other ('forward') direction, namely for generating: given a number, return the string. This is shown for example by the following query.
+
+```
+?- numerical(237,L,[]).
+L = [two,hundred,thirty,seven] ? 
+yes
+```
+</div>
+
+<div class="nb-cell markdown" name="md40">
+## Search exercise: The knight's tour
 </div>
 
 <div class="nb-cell markdown" name="md6">
 The Knight's Tour is a chess-related problem that was proposed by Euler. The problem is: how can a knight move around an empty chessboard and visit each of the squares exactly once? We will assume that the knight starts at the top-left corner.
+
 Take into account that a knight can only make L-shaped moves: one move consists of going one square horizontally and two squares vertically, or vice versa. For instance, for an 8x8 board and from a position K near the middle of the board, the knight can go to eight different new positions: 0 to 7 in the following figure.
+
+![https://people.cs.kuleuven.be/~timothy.vanbremen/teaching/plpm/questions/knightstour.gif](https://people.cs.kuleuven.be/~timothy.vanbremen/teaching/plpm/questions/knightstour.gif)
 </div>
 
 <div class="nb-cell markdown" name="md7">
@@ -3781,16 +3938,6 @@ in french, the knight is the 'Cavalier' in chess
 </div>
 
 <div class="nb-cell program" name="p10">
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%REmark%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%à revoir si il le faut, je l'ai backlé
-
-
-
-
-
 %this is a search problem
 %so, we will use our pattern for that
 
@@ -3798,8 +3945,6 @@ in french, the knight is the 'Cavalier' in chess
 %we will use a square on the board as a state, and it will
 %be represented by its coordinate (X,Y)
 %we start counting from upper left, so upper left is (1,1)
-
-
 
 size(8).  %size of the board 
 
